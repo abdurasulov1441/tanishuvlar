@@ -17,15 +17,14 @@ class _ChatDetailPageState extends State<ChatDetailPage> {
   final TextEditingController _messageController = TextEditingController();
   final FirebaseAuth _auth = FirebaseAuth.instance;
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
-  final ScrollController _scrollController =
-      ScrollController(); // Контроллер для прокрутки
+  final ScrollController _scrollController = ScrollController();
 
   late String currentUserId;
 
   @override
   void initState() {
     super.initState();
-    currentUserId = _auth.currentUser!.uid; // ID текущего пользователя
+    currentUserId = _auth.currentUser!.uid;
   }
 
   Future<void> _sendMessage() async {
@@ -41,18 +40,17 @@ class _ChatDetailPageState extends State<ChatDetailPage> {
       'receiverId': widget.userId,
       'message': message,
       'timestamp': FieldValue.serverTimestamp(),
+      'participants': [currentUserId, widget.userId], // Добавляем участников
     });
 
     _messageController.clear();
 
     // Прокрутка вниз после отправки сообщения
-    if (_scrollController.hasClients) {
-      _scrollController.animateTo(
-        _scrollController.position.maxScrollExtent,
-        duration: const Duration(milliseconds: 300),
-        curve: Curves.easeOut,
-      );
-    }
+    _scrollController.animateTo(
+      _scrollController.position.maxScrollExtent,
+      duration: const Duration(milliseconds: 300),
+      curve: Curves.easeOut,
+    );
   }
 
   @override
@@ -61,62 +59,85 @@ class _ChatDetailPageState extends State<ChatDetailPage> {
       appBar: AppBar(
         title: Text('Чат с ${widget.chatUserName}'),
       ),
-      body: SafeArea(
-        child: Column(
-          children: [
-            Expanded(
-              child: StreamBuilder<QuerySnapshot>(
-                stream: _firestore
-                    .collection('chats')
-                    .where('senderId', whereIn: [currentUserId, widget.userId])
-                    .where('receiverId',
-                        whereIn: [currentUserId, widget.userId])
-                    .orderBy('timestamp',
-                        descending: false) // Сортируем по времени
-                    .snapshots(),
-                builder: (context, snapshot) {
-                  if (snapshot.connectionState == ConnectionState.waiting) {
-                    return const Center(child: CircularProgressIndicator());
+      body: Column(
+        children: [
+          Expanded(
+            child: StreamBuilder<QuerySnapshot>(
+              stream: _firestore
+                  .collection('chats')
+                  .orderBy('timestamp',
+                      descending: false) // Сортируем по времени
+                  .snapshots(),
+              builder: (context, snapshot) {
+                if (!snapshot.hasData) {
+                  return const Center(child: CircularProgressIndicator());
+                }
+
+                var messages = snapshot.data!.docs.where((message) {
+                  // Фильтруем сообщения, чтобы оставить только те, что связаны с текущим пользователем и собеседником
+                  return (message['senderId'] == currentUserId &&
+                          message['receiverId'] == widget.userId) ||
+                      (message['senderId'] == widget.userId &&
+                          message['receiverId'] == currentUserId);
+                }).toList();
+
+                WidgetsBinding.instance.addPostFrameCallback((_) {
+                  if (_scrollController.hasClients) {
+                    _scrollController.animateTo(
+                      _scrollController.position.maxScrollExtent,
+                      duration: const Duration(milliseconds: 300),
+                      curve: Curves.easeOut,
+                    );
                   }
+                });
 
-                  if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
-                    return const Center(child: Text('Сообщений пока нет.'));
-                  }
+                return ListView.builder(
+                  controller: _scrollController,
+                  itemCount: messages.length,
+                  itemBuilder: (context, index) {
+                    var messageData = messages[index];
+                    bool isMe = messageData['senderId'] == currentUserId;
 
-                  var allMessages = snapshot.data!.docs;
-
-                  // Прокручиваем вниз, когда появляются новые сообщения
-                  WidgetsBinding.instance.addPostFrameCallback((_) {
-                    if (_scrollController.hasClients) {
-                      _scrollController.animateTo(
-                        _scrollController.position.maxScrollExtent,
-                        duration: const Duration(milliseconds: 300),
-                        curve: Curves.easeOut,
-                      );
-                    }
-                  });
-
-                  return ListView.builder(
-                    controller: _scrollController,
-                    itemCount: allMessages.length,
-                    itemBuilder: (context, index) {
-                      var messageData = allMessages[index];
-                      bool isMe = messageData['senderId'] == currentUserId;
-
-                      return _buildMessage(messageData['message'], isMe);
-                    },
-                  );
-                },
+                    return _buildMessage(messageData['message'], isMe);
+                  },
+                );
+              },
+            ),
+          ),
+          // Добавляем SafeArea для корректного отображения над навигационной панелью
+          SafeArea(
+            child: Padding(
+              padding: const EdgeInsets.all(8.0),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: TextField(
+                      controller: _messageController,
+                      decoration: InputDecoration(
+                        hintText: 'Введите сообщение...',
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(20.0),
+                        ),
+                        contentPadding:
+                            const EdgeInsets.symmetric(horizontal: 16.0),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 8.0),
+                  IconButton(
+                    icon: const Icon(Icons.send),
+                    color: Colors.blue,
+                    onPressed: _sendMessage,
+                  ),
+                ],
               ),
             ),
-            _buildMessageInput(), // Поле ввода и кнопка отправки
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
 
-  // Виджет для отображения сообщений
   Widget _buildMessage(String message, bool isMe) {
     return Container(
       margin: const EdgeInsets.symmetric(vertical: 8.0),
@@ -138,35 +159,6 @@ class _ChatDetailPageState extends State<ChatDetailPage> {
             ),
           ),
         ),
-      ),
-    );
-  }
-
-  // Виджет для ввода сообщения и кнопки отправки
-  Widget _buildMessageInput() {
-    return Padding(
-      padding: const EdgeInsets.all(8.0),
-      child: Row(
-        children: [
-          Expanded(
-            child: TextField(
-              controller: _messageController,
-              decoration: InputDecoration(
-                hintText: 'Введите сообщение...',
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(20.0),
-                ),
-                contentPadding: const EdgeInsets.symmetric(horizontal: 16.0),
-              ),
-            ),
-          ),
-          const SizedBox(width: 8.0),
-          IconButton(
-            icon: const Icon(Icons.send),
-            color: Colors.blue,
-            onPressed: _sendMessage,
-          ),
-        ],
       ),
     );
   }
