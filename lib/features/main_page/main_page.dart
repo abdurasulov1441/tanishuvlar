@@ -21,7 +21,7 @@ class _MainPageState extends State<MainPage> {
   void initState() {
     super.initState();
     _pages = [
-      HomePage(),
+      const HomePage(),
       const SearchPage(),
       const ChatPage(),
       DisplayProfilePage(),

@@ -45,9 +45,13 @@ class HomePage extends StatelessWidget {
 
               return ListTile(
                 leading: CircleAvatar(
-                  backgroundColor: Colors.blueAccent,
-                  child: Text(firstName[0].toUpperCase(),
-                      style: const TextStyle(color: Colors.white)),
+                  backgroundColor: gender == 'Женщина'
+                      ? Colors.pinkAccent
+                      : Colors.blueAccent,
+                  child: Text(
+                    firstName[0].toUpperCase(),
+                    style: const TextStyle(color: Colors.white),
+                  ),
                 ),
                 title: Text('$firstName $lastName'), // Показ имени и фамилии
                 subtitle: Text('Дата рождения: $birthDate\nПол: $gender'),

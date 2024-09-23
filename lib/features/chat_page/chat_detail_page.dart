@@ -3,8 +3,8 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
 class ChatDetailPage extends StatefulWidget {
-  final String chatId; // ID чата
-  final String userId; // Почта собеседника
+  final String chatId;
+  final String userId;
   final String chatUserName;
 
   const ChatDetailPage(
@@ -29,6 +29,27 @@ class _ChatDetailPageState extends State<ChatDetailPage> {
   void initState() {
     super.initState();
     currentUserEmail = _auth.currentUser!.email!;
+
+    // Устанавливаем активный статус при входе в чат
+    _setActiveStatus(true);
+
+    // Проверяем, прочитаны ли сообщения собеседником
+    _checkIfMessagesRead();
+  }
+
+  @override
+  void dispose() {
+    _setActiveStatus(false);
+    super.dispose();
+  }
+
+  Future<void> _setActiveStatus(bool isActive) async {
+    await _firestore.collection('users').doc(currentUserEmail).update({
+      'isActive': isActive,
+      'chatId': widget.chatId,
+    }).catchError((error) {
+      print("Ошибка обновления статуса пользователя: $error");
+    });
   }
 
   Future<void> _sendMessage() async {
@@ -38,35 +59,54 @@ class _ChatDetailPageState extends State<ChatDetailPage> {
 
     String message = _messageController.text.trim();
 
-    // Отправляем сообщение в существующий чат (по его ID)
-    await _firestore
+    setState(() {
+      _messageController.clear();
+    });
+
+    try {
+      await _firestore
+          .collection('chats')
+          .doc(widget.chatId)
+          .collection('messages')
+          .add({
+        'senderId': currentUserEmail,
+        'receiverId': widget.userId,
+        'message': message,
+        'timestamp': FieldValue.serverTimestamp(),
+        'status': 'delivered',
+      });
+
+      await _firestore.collection('chats').doc(widget.chatId).update({
+        'lastMessage': message,
+        'lastSender': currentUserEmail,
+        'timestamp': FieldValue.serverTimestamp(),
+      });
+
+      if (_scrollController.hasClients) {
+        _scrollController.animateTo(
+          _scrollController.position.maxScrollExtent,
+          duration: const Duration(milliseconds: 300),
+          curve: Curves.easeOut,
+        );
+      }
+    } catch (e) {
+      print('Ошибка отправки сообщения: $e');
+    }
+  }
+
+  Future<void> _checkIfMessagesRead() async {
+    QuerySnapshot unreadMessages = await _firestore
         .collection('chats')
         .doc(widget.chatId)
         .collection('messages')
-        .add({
-      'senderId': currentUserEmail, // Почта отправителя
-      'receiverId': widget.userId, // Почта получателя
-      'message': message,
-      'timestamp': FieldValue.serverTimestamp(),
-    });
+        .where('receiverId', isEqualTo: currentUserEmail)
+        .where('status', isEqualTo: 'delivered')
+        .get();
 
-    // Обновляем последнее сообщение в чате
-    await _firestore.collection('chats').doc(widget.chatId).update({
-      'lastMessage': message, // Обновляем последнее сообщение
-      'lastSender': currentUserEmail, // Обновляем отправителя
-      'timestamp':
-          FieldValue.serverTimestamp(), // Обновляем время последнего сообщения
-    });
-
-    _messageController.clear();
-
-    // Прокрутка вниз после отправки сообщения
-    if (_scrollController.hasClients) {
-      _scrollController.animateTo(
-        _scrollController.position.maxScrollExtent,
-        duration: const Duration(milliseconds: 300),
-        curve: Curves.easeOut,
-      );
+    for (var doc in unreadMessages.docs) {
+      await doc.reference.update({
+        'status': 'read',
+      });
     }
   }
 
@@ -74,7 +114,26 @@ class _ChatDetailPageState extends State<ChatDetailPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Чат с ${widget.chatUserName}'),
+        title: StreamBuilder<DocumentSnapshot>(
+          stream: _firestore.collection('users').doc(widget.userId).snapshots(),
+          builder: (context, snapshot) {
+            if (snapshot.connectionState == ConnectionState.waiting) {
+              return const CircularProgressIndicator();
+            }
+
+            if (!snapshot.hasData || !snapshot.data!.exists) {
+              return Text('Чат с ${widget.chatUserName}');
+            }
+
+            var userData = snapshot.data!.data() as Map<String, dynamic>;
+            bool isUserActiveInChat = userData['isActive'] == true &&
+                userData['chatId'] == widget.chatId;
+
+            return Text(
+              'Чат с ${widget.chatUserName} ${isUserActiveInChat ? "(online)" : ""}',
+            );
+          },
+        ),
       ),
       body: Column(
         children: [
@@ -82,8 +141,8 @@ class _ChatDetailPageState extends State<ChatDetailPage> {
             child: StreamBuilder<QuerySnapshot>(
               stream: _firestore
                   .collection('chats')
-                  .doc(widget.chatId) // Чат по его ID
-                  .collection('messages') // Сообщения в этом чате
+                  .doc(widget.chatId)
+                  .collection('messages')
                   .orderBy('timestamp', descending: false)
                   .snapshots(),
               builder: (context, snapshot) {
@@ -93,7 +152,6 @@ class _ChatDetailPageState extends State<ChatDetailPage> {
 
                 var messages = snapshot.data!.docs;
 
-                // Прокрутка вниз после рендера виджета
                 WidgetsBinding.instance.addPostFrameCallback((_) {
                   if (_scrollController.hasClients) {
                     _scrollController.animateTo(
@@ -112,9 +170,10 @@ class _ChatDetailPageState extends State<ChatDetailPage> {
                         messages[index].data() as Map<String, dynamic>;
 
                     String message = messageData['message'];
+                    String status = messageData['status'];
                     bool isMe = messageData['senderId'] == currentUserEmail;
 
-                    return _buildMessage(message, isMe);
+                    return _buildMessage(message, isMe, status);
                   },
                 );
               },
@@ -153,7 +212,9 @@ class _ChatDetailPageState extends State<ChatDetailPage> {
     );
   }
 
-  Widget _buildMessage(String message, bool isMe) {
+  Widget _buildMessage(String message, bool isMe, String status) {
+    IconData messageStatusIcon = status == 'read' ? Icons.done_all : Icons.done;
+
     return Container(
       margin: const EdgeInsets.symmetric(vertical: 8.0),
       padding: isMe
@@ -161,18 +222,33 @@ class _ChatDetailPageState extends State<ChatDetailPage> {
           : const EdgeInsets.only(left: 16.0, right: 80.0),
       child: Align(
         alignment: isMe ? Alignment.centerRight : Alignment.centerLeft,
-        child: Container(
-          decoration: BoxDecoration(
-            color: isMe ? Colors.blue : Colors.grey[300],
-            borderRadius: BorderRadius.circular(16.0),
-          ),
-          padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 16),
-          child: Text(
-            message,
-            style: TextStyle(
-              color: isMe ? Colors.white : Colors.black87,
+        child: Row(
+          mainAxisAlignment:
+              isMe ? MainAxisAlignment.end : MainAxisAlignment.start,
+          children: [
+            Container(
+              decoration: BoxDecoration(
+                color: isMe ? Colors.blue : Colors.grey[300],
+                borderRadius: BorderRadius.circular(16.0),
+              ),
+              padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 16),
+              child: Text(
+                message,
+                style: TextStyle(
+                  color: isMe ? Colors.white : Colors.black87,
+                ),
+              ),
             ),
-          ),
+            if (isMe)
+              Padding(
+                padding: const EdgeInsets.only(left: 8.0),
+                child: Icon(
+                  messageStatusIcon,
+                  size: 16.0,
+                  color: status == 'read' ? Colors.blue : Colors.grey,
+                ),
+              ),
+          ],
         ),
       ),
     );

@@ -1,7 +1,7 @@
+import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:flutter/material.dart';
-import 'package:intl/intl.dart'; // Для форматирования даты и вычисления возраста
+import 'package:tanishuvlar/features/chat_page/chat_detail_page.dart';
 
 class SearchPage extends StatefulWidget {
   const SearchPage({super.key});
@@ -19,8 +19,9 @@ class _SearchPageState extends State<SearchPage> {
   String? _selectedCommunicationGoal;
   String? _selectedRegion;
 
-  // Диапазон возраста
-  RangeValues _ageRange = const RangeValues(14, 60); // Возраст от 14 до 60 лет
+  // Список пользователей
+  List<DocumentSnapshot> _allUsers = [];
+  List<DocumentSnapshot> _filteredUsers = [];
 
   // Опции для выпадающих списков
   final List<String> _genders = ['Мужчина', 'Женщина', 'Другой'];
@@ -41,62 +42,160 @@ class _SearchPageState extends State<SearchPage> {
   // Получение текущего пользователя
   final User? currentUser = FirebaseAuth.instance.currentUser;
 
-  // Метод для поиска пользователей
-  Stream<QuerySnapshot> _searchUsers() {
-    Query query = FirebaseFirestore.instance.collection('profiles');
-
-    // Исключаем текущего пользователя
-    if (currentUser != null) {
-      query =
-          query.where(FieldPath.documentId, isNotEqualTo: currentUser!.email);
-    }
-
-    // Поиск по имени и фамилии
-    if (_searchController.text.isNotEmpty) {
-      query = query.where('firstName',
-          isGreaterThanOrEqualTo: _searchController.text);
-    }
-
-    // Фильтр по полу
-    if (_selectedGender != null && _selectedGender!.isNotEmpty) {
-      query = query.where('gender', isEqualTo: _selectedGender);
-    }
-
-    // Фильтр по цели общения
-    if (_selectedCommunicationGoal != null &&
-        _selectedCommunicationGoal!.isNotEmpty) {
-      query = query.where('communicationGoal',
-          isEqualTo: _selectedCommunicationGoal);
-    }
-
-    // Фильтр по области
-    if (_selectedRegion != null && _selectedRegion!.isNotEmpty) {
-      query = query.where('region', isEqualTo: _selectedRegion);
-    }
-
-    // Фильтр по возрасту
-    int currentYear = DateTime.now().year;
-    int minYear = currentYear - _ageRange.end.toInt(); // Старший возраст
-    int maxYear = currentYear - _ageRange.start.toInt(); // Младший возраст
-
-    // Фильтруем пользователей по возрасту, предполагаем, что birthDate хранится как строка в формате "dd.MM.yyyy"
-    query = query.where('birthDate',
-        isGreaterThanOrEqualTo:
-            DateFormat('d.M.yyyy').format(DateTime(minYear, 1, 1)));
-    query = query.where('birthDate',
-        isLessThanOrEqualTo:
-            DateFormat('d.M.yyyy').format(DateTime(maxYear, 12, 31)));
-
-    return query.snapshots();
-  }
-
   @override
   void initState() {
     super.initState();
 
-    // Обновляем результаты при вводе текста
+    // Загружаем всех пользователей из Firestore при инициализации
+    _loadAllUsers();
+
+    // Обновляем результаты при изменении текста поиска
     _searchController.addListener(() {
-      setState(() {}); // Обновляем интерфейс при изменении текста поиска
+      _filterUsers();
+    });
+  }
+
+  // Метод для загрузки всех пользователей
+  Future<void> _loadAllUsers() async {
+    QuerySnapshot snapshot =
+        await FirebaseFirestore.instance.collection('profiles').get();
+    setState(() {
+      _allUsers = snapshot.docs; // Сохраняем всех пользователей
+      _filteredUsers = List.from(_allUsers); // Изначально показываем всех
+    });
+  }
+
+  // Метод для фильтрации пользователей на клиенте
+  void _filterUsers() {
+    String searchText = _searchController.text.trim().toLowerCase();
+
+    setState(() {
+      _filteredUsers = _allUsers.where((doc) {
+        final data = doc.data() as Map<String, dynamic>;
+        final firstName = data['firstName']?.toLowerCase() ?? '';
+        final lastName = data['lastName']?.toLowerCase() ?? '';
+        final gender = data['gender'] ?? '';
+        final communicationGoal = data['communicationGoal'] ?? '';
+        final region = data['region'] ?? '';
+
+        // Фильтрация по имени или фамилии
+        bool matchesName =
+            firstName.contains(searchText) || lastName.contains(searchText);
+
+        // Фильтрация по полу
+        bool matchesGender =
+            _selectedGender == null || _selectedGender == gender;
+
+        // Фильтрация по цели общения
+        bool matchesCommunicationGoal = _selectedCommunicationGoal == null ||
+            _selectedCommunicationGoal == communicationGoal;
+
+        // Фильтрация по области проживания
+        bool matchesRegion =
+            _selectedRegion == null || _selectedRegion == region;
+
+        // Возвращаем true, если все условия выполняются
+        return matchesName &&
+            matchesGender &&
+            matchesCommunicationGoal &&
+            matchesRegion;
+      }).toList();
+    });
+  }
+
+  // Метод для отображения результатов
+  Widget _buildUserList() {
+    if (_filteredUsers.isEmpty) {
+      return const Center(child: Text('Пользователи не найдены.'));
+    }
+
+    return ListView.builder(
+      itemCount: _filteredUsers.length,
+      itemBuilder: (context, index) {
+        final userData = _filteredUsers[index].data() as Map<String, dynamic>;
+        final name = userData['firstName'] ?? 'Не указано';
+        final lastName = userData['lastName'] ?? '';
+        final gender = userData['gender'] ?? 'Не указано';
+        final region = userData['region'] ?? 'Не указано';
+        final userEmail = _filteredUsers[index].id; // email as document ID
+
+        return ListTile(
+          leading: CircleAvatar(
+            backgroundImage: AssetImage(
+              gender == 'Мужчина'
+                  ? 'assets/icons/man.png'
+                  : 'assets/icons/woman.png',
+            ),
+          ),
+          title: Text('$name $lastName'),
+          subtitle: Text('Пол: $gender\nОбласть: $region'),
+          onTap: () {
+            _handleUserTap(
+                context, currentUser!.email!, userEmail); // Переход в чат
+          },
+        );
+      },
+    );
+  }
+
+  // Метод для обработки нажатия на пользователя
+  Future<void> _handleUserTap(
+      BuildContext context, String currentUserEmail, String userEmail) async {
+    QuerySnapshot chatSnapshot = await FirebaseFirestore.instance
+        .collection('chats')
+        .where('participants', arrayContains: currentUserEmail)
+        .get();
+
+    DocumentSnapshot? existingChat;
+
+    for (var doc in chatSnapshot.docs) {
+      var participants = doc['participants'] as List;
+      if (participants.contains(userEmail)) {
+        existingChat = doc;
+        break;
+      }
+    }
+
+    if (existingChat != null) {
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => ChatDetailPage(
+            chatId: existingChat!.id,
+            userId: userEmail,
+            chatUserName: userEmail,
+          ),
+        ),
+      );
+    } else {
+      DocumentReference newChat =
+          await FirebaseFirestore.instance.collection('chats').add({
+        'participants': [currentUserEmail, userEmail],
+        'lastMessage': '',
+        'timestamp': FieldValue.serverTimestamp(),
+      });
+
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => ChatDetailPage(
+            chatId: newChat.id,
+            userId: userEmail,
+            chatUserName: userEmail,
+          ),
+        ),
+      );
+    }
+  }
+
+  // Метод для очистки всех полей
+  void _clearFilters() {
+    setState(() {
+      _searchController.clear(); // Очистка текстового поля
+      _selectedGender = null; // Сброс выбора пола
+      _selectedCommunicationGoal = null; // Сброс выбора цели общения
+      _selectedRegion = null; // Сброс региона
+      _filteredUsers = List.from(_allUsers); // Показ всех пользователей
     });
   }
 
@@ -105,13 +204,18 @@ class _SearchPageState extends State<SearchPage> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Поиск пользователей'),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.clear),
+            onPressed: _clearFilters, // Кнопка для очистки всех фильтров
+          ),
+        ],
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Поле для поиска по имени и фамилии
             TextField(
               controller: _searchController,
               decoration: const InputDecoration(
@@ -120,8 +224,6 @@ class _SearchPageState extends State<SearchPage> {
               ),
             ),
             const SizedBox(height: 16),
-
-            // Фильтр по полу
             DropdownButtonFormField<String>(
               decoration: const InputDecoration(
                 labelText: 'Пол',
@@ -137,12 +239,11 @@ class _SearchPageState extends State<SearchPage> {
               onChanged: (newValue) {
                 setState(() {
                   _selectedGender = newValue;
+                  _filterUsers(); // Фильтрация при изменении
                 });
               },
             ),
             const SizedBox(height: 16),
-
-            // Фильтр по цели общения
             DropdownButtonFormField<String>(
               decoration: const InputDecoration(
                 labelText: 'Цель общения',
@@ -158,12 +259,11 @@ class _SearchPageState extends State<SearchPage> {
               onChanged: (newValue) {
                 setState(() {
                   _selectedCommunicationGoal = newValue;
+                  _filterUsers(); // Фильтрация при изменении
                 });
               },
             ),
             const SizedBox(height: 16),
-
-            // Фильтр по области
             DropdownButtonFormField<String>(
               decoration: const InputDecoration(
                 labelText: 'Область проживания',
@@ -179,72 +279,13 @@ class _SearchPageState extends State<SearchPage> {
               onChanged: (newValue) {
                 setState(() {
                   _selectedRegion = newValue;
+                  _filterUsers(); // Фильтрация при изменении
                 });
               },
             ),
             const SizedBox(height: 16),
-
-            // Слайдер для диапазона возраста
-            Text(
-                'Возраст: ${_ageRange.start.round()} - ${_ageRange.end.round()} лет'),
-            RangeSlider(
-              values: _ageRange,
-              min: 14, // Начало с 14 лет
-              max: 100,
-              divisions: 86,
-              labels: RangeLabels(
-                _ageRange.start.round().toString(),
-                _ageRange.end.round().toString(),
-              ),
-              onChanged: (RangeValues values) {
-                setState(() {
-                  _ageRange = values;
-                });
-              },
-            ),
-            const SizedBox(height: 16),
-
-            // Результаты поиска
             Expanded(
-              child: StreamBuilder<QuerySnapshot>(
-                stream: _searchUsers(),
-                builder: (context, snapshot) {
-                  if (snapshot.connectionState == ConnectionState.waiting) {
-                    return const Center(child: CircularProgressIndicator());
-                  }
-
-                  if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
-                    return const Center(
-                        child: Text('Пользователи не найдены.'));
-                  }
-
-                  final users = snapshot.data!.docs;
-
-                  return ListView.builder(
-                    itemCount: users.length,
-                    itemBuilder: (context, index) {
-                      final userData =
-                          users[index].data() as Map<String, dynamic>;
-                      final name = userData['firstName'] ?? 'Не указано';
-                      final lastName = userData['lastName'] ?? '';
-                      final birthDate = userData['birthDate'] ?? 'Не указано';
-                      final gender = userData['gender'] ?? 'Не указано';
-                      final region = userData['region'] ?? 'Не указано';
-
-                      return ListTile(
-                        leading: CircleAvatar(
-                          backgroundColor: Colors.blueAccent,
-                          child: Text(name[0].toUpperCase(),
-                              style: const TextStyle(color: Colors.white)),
-                        ),
-                        title: Text('$name $lastName'),
-                        subtitle: Text(
-                            'Дата рождения: $birthDate\nПол: $gender\nОбласть: $region'),
-                      );
-                    },
-                  );
-                },
-              ),
+              child: _buildUserList(),
             ),
           ],
         ),

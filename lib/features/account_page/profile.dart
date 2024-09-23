@@ -3,6 +3,8 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
 class DisplayProfilePage extends StatefulWidget {
+  const DisplayProfilePage({super.key});
+
   @override
   _DisplayProfilePageState createState() => _DisplayProfilePageState();
 }
@@ -137,13 +139,13 @@ class _DisplayProfilePageState extends State<DisplayProfilePage> {
             onPressed: () {
               signOut();
             },
-            icon: Icon(Icons.exit_to_app)),
-        title: Text('Профиль'),
+            icon: const Icon(Icons.exit_to_app)),
+        title: const Text('Профиль'),
         centerTitle: true,
         actions: [
           if (!isEditing)
             IconButton(
-              icon: Icon(Icons.edit),
+              icon: const Icon(Icons.edit),
               onPressed: () {
                 setState(() {
                   isEditing = true;
@@ -158,7 +160,7 @@ class _DisplayProfilePageState extends State<DisplayProfilePage> {
         ],
       ),
       body: isLoading
-          ? Center(child: CircularProgressIndicator())
+          ? const Center(child: CircularProgressIndicator())
           : isEditing
               ? SingleChildScrollView(
                   child: Padding(
@@ -167,13 +169,13 @@ class _DisplayProfilePageState extends State<DisplayProfilePage> {
                       key: _formKey,
                       child: Column(
                         children: [
-                          SizedBox(height: 20),
-                          Text(
+                          const SizedBox(height: 20),
+                          const Text(
                             'Заполните профиль',
                             style: TextStyle(
                                 fontSize: 22, fontWeight: FontWeight.bold),
                           ),
-                          SizedBox(height: 20),
+                          const SizedBox(height: 20),
                           _buildTextField(_firstNameController, 'Имя'),
                           _buildTextField(_lastNameController, 'Фамилия'),
                           _buildDatePickerField(
@@ -200,10 +202,10 @@ class _DisplayProfilePageState extends State<DisplayProfilePage> {
                               });
                             },
                           ),
-                          SizedBox(height: 20),
+                          const SizedBox(height: 20),
                           ElevatedButton(
                             onPressed: _saveUserProfile,
-                            child: Text('Сохранить профиль'),
+                            child: const Text('Сохранить профиль'),
                           ),
                         ],
                       ),
@@ -216,15 +218,15 @@ class _DisplayProfilePageState extends State<DisplayProfilePage> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        SizedBox(height: 20),
-                        Center(
+                        const SizedBox(height: 20),
+                        const Center(
                           child: CircleAvatar(
                             radius: 50,
                             backgroundImage:
                                 AssetImage('assets/images/user.png'),
                           ),
                         ),
-                        SizedBox(height: 20),
+                        const SizedBox(height: 20),
                         _buildProfileField('Имя', firstName ?? 'Не указано'),
                         _buildProfileField('Фамилия', lastName ?? 'Не указано'),
                         _buildProfileField(
@@ -250,15 +252,15 @@ class _DisplayProfilePageState extends State<DisplayProfilePage> {
         children: [
           Text(
             label,
-            style: TextStyle(
+            style: const TextStyle(
               color: Colors.grey,
               fontSize: 16,
               fontWeight: FontWeight.bold,
             ),
           ),
-          SizedBox(height: 5),
+          const SizedBox(height: 5),
           Container(
-            padding: EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+            padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
             width: double.infinity,
             decoration: BoxDecoration(
               color: Colors.grey[200],
@@ -266,7 +268,7 @@ class _DisplayProfilePageState extends State<DisplayProfilePage> {
             ),
             child: Text(
               value.isEmpty ? 'Не указано' : value,
-              style: TextStyle(fontSize: 16, color: Colors.black),
+              style: const TextStyle(fontSize: 16, color: Colors.black),
             ),
           ),
         ],
