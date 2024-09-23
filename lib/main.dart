@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-
 import 'package:firebase_core/firebase_core.dart';
 import 'package:tanishuvlar/features/auth/account_screen.dart';
 import 'package:tanishuvlar/features/auth/home_screen.dart';
@@ -56,7 +55,8 @@ class MyApp extends StatelessWidget {
         '/signup': (context) => const SignUpScreen(),
         '/reset_password': (context) => const ResetPasswordScreen(),
         '/verify_email': (context) => const VerifyEmailScreen(),
-        '/main': (context) => const MainPage(),
+        '/main': (context) =>
+            const MainPage(), // Переход на основную страницу с чатом и другими экранами
       },
       initialRoute: '/',
     );

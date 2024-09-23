@@ -21,7 +21,7 @@ class _MainPageState extends State<MainPage> {
   void initState() {
     super.initState();
     _pages = [
-      HomePage(onUserSelected: _navigateToChat),
+      HomePage(),
       const SearchPage(),
       const ChatPage(),
       DisplayProfilePage(),
@@ -34,17 +34,20 @@ class _MainPageState extends State<MainPage> {
     });
   }
 
-  void _navigateToChat(String userId, String userName) {
+  // Исправляем функцию для корректной навигации к чату
+  void _navigateToChat(String chatId, String userEmail) {
     setState(() {
       _selectedIndex = 2; // Переключаемся на вкладку чата
     });
 
-    // Здесь можно передать данные о пользователе в чате
     Navigator.push(
       context,
       MaterialPageRoute(
-        builder: (context) =>
-            ChatDetailPage(userId: userId, chatUserName: userName),
+        builder: (context) => ChatDetailPage(
+          chatId: chatId, // Передаем ID чата
+          userId: userEmail, // Почта собеседника
+          chatUserName: userEmail, // Имя собеседника (почта)
+        ),
       ),
     );
   }

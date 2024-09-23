@@ -1,14 +1,15 @@
+import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:flutter/material.dart';
 import 'chat_detail_page.dart';
+import 'package:intl/intl.dart'; // Для форматирования времени
 
 class ChatPage extends StatelessWidget {
   const ChatPage({super.key});
 
   @override
   Widget build(BuildContext context) {
-    final currentUserId = FirebaseAuth.instance.currentUser!.uid;
+    final currentUserEmail = FirebaseAuth.instance.currentUser!.email;
 
     return Scaffold(
       appBar: AppBar(
@@ -17,115 +18,67 @@ class ChatPage extends StatelessWidget {
       body: StreamBuilder<QuerySnapshot>(
         stream: FirebaseFirestore.instance
             .collection('chats')
-            .where('senderId', isEqualTo: currentUserId)
+            .where('participants', arrayContains: currentUserEmail)
+            .orderBy('timestamp', descending: true) // Сортировка по времени
             .snapshots(),
-        builder: (context, snapshotSent) {
-          if (snapshotSent.connectionState == ConnectionState.waiting) {
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
             return const Center(child: CircularProgressIndicator());
           }
 
-          return StreamBuilder<QuerySnapshot>(
-            stream: FirebaseFirestore.instance
-                .collection('chats')
-                .where('receiverId', isEqualTo: currentUserId)
-                .snapshots(),
-            builder: (context, snapshotReceived) {
-              if (snapshotReceived.connectionState == ConnectionState.waiting) {
-                return const Center(child: CircularProgressIndicator());
+          if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
+            return const Center(child: Text('Нет активных чатов.'));
+          }
+
+          final chatDocs = snapshot.data!.docs;
+
+          return ListView.builder(
+            itemCount: chatDocs.length,
+            itemBuilder: (context, index) {
+              final chatDoc = chatDocs[index];
+              final chatData = chatDoc.data() as Map<String, dynamic>;
+              final participants = chatData['participants'] as List<dynamic>;
+
+              // Находим почту собеседника
+              final chatPartnerEmail =
+                  participants.firstWhere((email) => email != currentUserEmail);
+
+              // Последнее сообщение и его отправитель
+              final lastMessage = chatData['lastMessage'] ?? '';
+              final lastSender = chatData['lastSender'] ?? '';
+
+              // Форматируем время последнего сообщения
+              final timestamp =
+                  chatData['timestamp'] as Timestamp? ?? Timestamp.now();
+              final formattedTime = DateFormat.Hm().format(timestamp.toDate());
+
+              // Подготавливаем текст для последнего сообщения
+              String lastMessageDisplay;
+              if (lastSender == currentUserEmail) {
+                lastMessageDisplay =
+                    'Вы: $lastMessage'; // Если отправитель - текущий пользователь
+              } else {
+                lastMessageDisplay =
+                    lastMessage; // Если отправитель - собеседник
               }
 
-              final sentMessages = snapshotSent.data?.docs ?? [];
-              final receivedMessages = snapshotReceived.data?.docs ?? [];
-
-              // Создаем словарь для хранения последнего сообщения для каждого пользователя
-              final chatUsers = <String, Map<String, dynamic>>{};
-
-              // Обрабатываем отправленные сообщения
-              for (var message in sentMessages) {
-                final receiverId = message['receiverId'];
-                final lastMessage = message['message'];
-                final timestamp = message['timestamp'] as Timestamp?;
-
-                if (!chatUsers.containsKey(receiverId)) {
-                  chatUsers[receiverId] = {
-                    'lastMessage': lastMessage,
-                    'timestamp': timestamp,
-                  };
-                } else {
-                  // Обновляем запись, если текущее сообщение новее
-                  if (timestamp != null &&
-                      (chatUsers[receiverId]?['timestamp'] == null ||
-                          timestamp.compareTo(
-                                  chatUsers[receiverId]!['timestamp']
-                                      as Timestamp) >
-                              0)) {
-                    chatUsers[receiverId] = {
-                      'lastMessage': lastMessage,
-                      'timestamp': timestamp,
-                    };
-                  }
-                }
-              }
-
-              // Обрабатываем полученные сообщения
-              for (var message in receivedMessages) {
-                final senderId = message['senderId'];
-                final lastMessage = message['message'];
-                final timestamp = message['timestamp'] as Timestamp?;
-
-                if (!chatUsers.containsKey(senderId)) {
-                  chatUsers[senderId] = {
-                    'lastMessage': lastMessage,
-                    'timestamp': timestamp,
-                  };
-                } else {
-                  // Обновляем запись, если текущее сообщение новее
-                  if (timestamp != null &&
-                      (chatUsers[senderId]?['timestamp'] == null ||
-                          timestamp.compareTo(chatUsers[senderId]!['timestamp']
-                                  as Timestamp) >
-                              0)) {
-                    chatUsers[senderId] = {
-                      'lastMessage': lastMessage,
-                      'timestamp': timestamp,
-                    };
-                  }
-                }
-              }
-
-              // Если нет чатов, отображаем сообщение
-              if (chatUsers.isEmpty) {
-                return const Center(
-                  child: Text('Нет активных чатов.'),
-                );
-              }
-
-              // Отображаем список пользователей с последними сообщениями
-              return ListView.builder(
-                itemCount: chatUsers.length,
-                itemBuilder: (context, index) {
-                  final userId = chatUsers.keys.elementAt(index);
-                  final lastMessage = chatUsers[userId]?['lastMessage'] ?? '';
-                  final timestamp =
-                      chatUsers[userId]?['timestamp'] ?? Timestamp.now();
-
-                  return ListTile(
-                    leading: const CircleAvatar(child: Icon(Icons.person)),
-                    title: Text('Пользователь $userId'),
-                    subtitle: Text(
-                      '$lastMessage\n${timestamp.toDate()}',
+              return ListTile(
+                leading: const CircleAvatar(child: Icon(Icons.person)),
+                title: Text(
+                    'Чат с $chatPartnerEmail'), // Показываем почту собеседника
+                subtitle: Text(
+                  '$lastMessageDisplay\n$formattedTime',
+                ), // Последнее сообщение и время
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => ChatDetailPage(
+                        chatId: chatDoc.id, // Передаем chatId
+                        userId: chatPartnerEmail,
+                        chatUserName: chatPartnerEmail,
+                      ),
                     ),
-                    onTap: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => ChatDetailPage(
-                            chatUserName: 'Пользователь $userId',
-                            userId: userId,
-                          ),
-                        ),
-                      );
-                    },
                   );
                 },
               );

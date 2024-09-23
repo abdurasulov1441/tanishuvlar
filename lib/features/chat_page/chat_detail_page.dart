@@ -3,11 +3,15 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
 class ChatDetailPage extends StatefulWidget {
-  final String userId; // ID собеседника
+  final String chatId; // ID чата
+  final String userId; // Почта собеседника
   final String chatUserName;
 
   const ChatDetailPage(
-      {super.key, required this.userId, required this.chatUserName});
+      {super.key,
+      required this.chatId,
+      required this.userId,
+      required this.chatUserName});
 
   @override
   _ChatDetailPageState createState() => _ChatDetailPageState();
@@ -19,12 +23,12 @@ class _ChatDetailPageState extends State<ChatDetailPage> {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   final ScrollController _scrollController = ScrollController();
 
-  late String currentUserId;
+  late String currentUserEmail;
 
   @override
   void initState() {
     super.initState();
-    currentUserId = _auth.currentUser!.uid;
+    currentUserEmail = _auth.currentUser!.email!;
   }
 
   Future<void> _sendMessage() async {
@@ -34,23 +38,36 @@ class _ChatDetailPageState extends State<ChatDetailPage> {
 
     String message = _messageController.text.trim();
 
-    // Отправляем сообщение в Firestore
-    await _firestore.collection('chats').add({
-      'senderId': currentUserId,
-      'receiverId': widget.userId,
+    // Отправляем сообщение в существующий чат (по его ID)
+    await _firestore
+        .collection('chats')
+        .doc(widget.chatId)
+        .collection('messages')
+        .add({
+      'senderId': currentUserEmail, // Почта отправителя
+      'receiverId': widget.userId, // Почта получателя
       'message': message,
       'timestamp': FieldValue.serverTimestamp(),
-      'participants': [currentUserId, widget.userId], // Добавляем участников
+    });
+
+    // Обновляем последнее сообщение в чате
+    await _firestore.collection('chats').doc(widget.chatId).update({
+      'lastMessage': message, // Обновляем последнее сообщение
+      'lastSender': currentUserEmail, // Обновляем отправителя
+      'timestamp':
+          FieldValue.serverTimestamp(), // Обновляем время последнего сообщения
     });
 
     _messageController.clear();
 
     // Прокрутка вниз после отправки сообщения
-    _scrollController.animateTo(
-      _scrollController.position.maxScrollExtent,
-      duration: const Duration(milliseconds: 300),
-      curve: Curves.easeOut,
-    );
+    if (_scrollController.hasClients) {
+      _scrollController.animateTo(
+        _scrollController.position.maxScrollExtent,
+        duration: const Duration(milliseconds: 300),
+        curve: Curves.easeOut,
+      );
+    }
   }
 
   @override
@@ -65,22 +82,18 @@ class _ChatDetailPageState extends State<ChatDetailPage> {
             child: StreamBuilder<QuerySnapshot>(
               stream: _firestore
                   .collection('chats')
-                  .orderBy('timestamp',
-                      descending: false) // Сортируем по времени
+                  .doc(widget.chatId) // Чат по его ID
+                  .collection('messages') // Сообщения в этом чате
+                  .orderBy('timestamp', descending: false)
                   .snapshots(),
               builder: (context, snapshot) {
                 if (!snapshot.hasData) {
                   return const Center(child: CircularProgressIndicator());
                 }
 
-                var messages = snapshot.data!.docs.where((message) {
-                  // Фильтруем сообщения, чтобы оставить только те, что связаны с текущим пользователем и собеседником
-                  return (message['senderId'] == currentUserId &&
-                          message['receiverId'] == widget.userId) ||
-                      (message['senderId'] == widget.userId &&
-                          message['receiverId'] == currentUserId);
-                }).toList();
+                var messages = snapshot.data!.docs;
 
+                // Прокрутка вниз после рендера виджета
                 WidgetsBinding.instance.addPostFrameCallback((_) {
                   if (_scrollController.hasClients) {
                     _scrollController.animateTo(
@@ -95,16 +108,18 @@ class _ChatDetailPageState extends State<ChatDetailPage> {
                   controller: _scrollController,
                   itemCount: messages.length,
                   itemBuilder: (context, index) {
-                    var messageData = messages[index];
-                    bool isMe = messageData['senderId'] == currentUserId;
+                    var messageData =
+                        messages[index].data() as Map<String, dynamic>;
 
-                    return _buildMessage(messageData['message'], isMe);
+                    String message = messageData['message'];
+                    bool isMe = messageData['senderId'] == currentUserEmail;
+
+                    return _buildMessage(message, isMe);
                   },
                 );
               },
             ),
           ),
-          // Добавляем SafeArea для корректного отображения над навигационной панелью
           SafeArea(
             child: Padding(
               padding: const EdgeInsets.all(8.0),
