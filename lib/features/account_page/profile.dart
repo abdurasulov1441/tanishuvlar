@@ -1,6 +1,8 @@
+import 'dart:math';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 class DisplayProfilePage extends StatefulWidget {
   const DisplayProfilePage({super.key});
@@ -15,9 +17,7 @@ class _DisplayProfilePageState extends State<DisplayProfilePage> {
 
   Future<void> signOut() async {
     final navigator = Navigator.of(context);
-
     await FirebaseAuth.instance.signOut();
-
     navigator.pushNamedAndRemoveUntil('/home', (Route<dynamic> route) => false);
   }
 
@@ -39,7 +39,6 @@ class _DisplayProfilePageState extends State<DisplayProfilePage> {
   final TextEditingController _firstNameController = TextEditingController();
   final TextEditingController _lastNameController = TextEditingController();
   final TextEditingController _birthDateController = TextEditingController();
-  final TextEditingController _regionController = TextEditingController();
   final TextEditingController _phoneController = TextEditingController();
 
   String? _selectedGender;
@@ -51,6 +50,23 @@ class _DisplayProfilePageState extends State<DisplayProfilePage> {
     'Дружба',
     'Поиск любви',
     'Завести семью'
+  ];
+
+  final List<String> _regions = [
+    'Каракалпакстан Р',
+    'Андижан',
+    'Бухара',
+    'Джизах',
+    'Кашкадарья',
+    'Наманган',
+    'Наваи',
+    'Самарканд',
+    'Сурхандарья',
+    'Сирдарья',
+    'город Ташкент',
+    'Ташкент обл',
+    'Фергана',
+    'Хорезм'
   ];
 
   @override
@@ -73,7 +89,10 @@ class _DisplayProfilePageState extends State<DisplayProfilePage> {
           lastName = userDoc['lastName'] ?? '';
           birthDate = userDoc['birthDate'] ?? '';
           _selectedGender = userDoc['gender'] ?? '';
-          region = userDoc['region'] ?? '';
+
+          region =
+              _regions.contains(userDoc['region']) ? userDoc['region'] : null;
+
           phone = userDoc['phone'] ?? '';
           _selectedCommunicationGoal = userDoc['communicationGoal'] ?? '';
           profileExists = true;
@@ -101,7 +120,7 @@ class _DisplayProfilePageState extends State<DisplayProfilePage> {
           'lastName': _lastNameController.text,
           'birthDate': _birthDateController.text,
           'gender': _selectedGender,
-          'region': _regionController.text,
+          'region': region,
           'phone': _phoneController.text,
           'communicationGoal': _selectedCommunicationGoal,
         });
@@ -131,6 +150,50 @@ class _DisplayProfilePageState extends State<DisplayProfilePage> {
     }
   }
 
+  // Phone number formatter to format phone numbers like +998 (XX) XXX XX XX
+  final _phoneNumberFormatter = TextInputFormatter.withFunction(
+    (oldValue, newValue) {
+      if (newValue.text.isEmpty) {
+        return newValue.copyWith(text: '+998 ');
+      }
+
+      // Remove all non-digit characters, except '+' at the beginning
+      String digits = newValue.text.replaceAll(RegExp(r'[^\d+]'), '');
+
+      // Ensure it starts with +998
+      if (!digits.startsWith('+998')) {
+        digits = '+998';
+      }
+
+      // Limiting the input to match the format
+      if (digits.length > 13) {
+        digits = digits.substring(0, 13); // Limit to the +998 XXX XX XX format
+      }
+
+      // Format the number
+      String formatted = digits;
+
+      if (digits.length > 4) {
+        formatted = '+998 (${digits.substring(4, min(6, digits.length))}';
+      }
+      if (digits.length > 6) {
+        formatted += ') ${digits.substring(6, min(9, digits.length))}';
+      }
+      if (digits.length > 9) {
+        formatted += ' ${digits.substring(9, min(11, digits.length))}';
+      }
+      if (digits.length > 11) {
+        formatted += ' ${digits.substring(11)}';
+      }
+
+      // Ensure the selection index stays after the new text
+      return TextEditingValue(
+        text: formatted,
+        selection: TextSelection.collapsed(offset: formatted.length),
+      );
+    },
+  );
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -152,7 +215,6 @@ class _DisplayProfilePageState extends State<DisplayProfilePage> {
                   _firstNameController.text = firstName ?? '';
                   _lastNameController.text = lastName ?? '';
                   _birthDateController.text = birthDate ?? '';
-                  _regionController.text = region ?? '';
                   _phoneController.text = phone ?? '';
                 });
               },
@@ -176,8 +238,9 @@ class _DisplayProfilePageState extends State<DisplayProfilePage> {
                                 fontSize: 22, fontWeight: FontWeight.bold),
                           ),
                           const SizedBox(height: 20),
-                          _buildTextField(_firstNameController, 'Имя'),
-                          _buildTextField(_lastNameController, 'Фамилия'),
+                          _buildTextField(_firstNameController, 'Имя', false),
+                          _buildTextField(
+                              _lastNameController, 'Фамилия', false),
                           _buildDatePickerField(
                               _birthDateController, 'Дата рождения', context),
                           _buildDropdownButton(
@@ -190,8 +253,17 @@ class _DisplayProfilePageState extends State<DisplayProfilePage> {
                               });
                             },
                           ),
-                          _buildTextField(_regionController, 'Область'),
-                          _buildTextField(_phoneController, 'Телефон'),
+                          _buildDropdownButton(
+                            'Область',
+                            region,
+                            _regions,
+                            (newValue) {
+                              setState(() {
+                                region = newValue!;
+                              });
+                            },
+                          ),
+                          _buildTextField(_phoneController, 'Телефон', true),
                           _buildDropdownButton(
                             'Цель общения',
                             _selectedCommunicationGoal,
@@ -276,14 +348,21 @@ class _DisplayProfilePageState extends State<DisplayProfilePage> {
     );
   }
 
-  Widget _buildTextField(TextEditingController controller, String labelText) {
+  Widget _buildTextField(
+      TextEditingController controller, String labelText, bool isPhoneNumber) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 10.0),
       child: TextFormField(
         controller: controller,
+        keyboardType: isPhoneNumber ? TextInputType.phone : TextInputType.text,
+        inputFormatters: isPhoneNumber ? [_phoneNumberFormatter] : [],
         validator: (value) {
           if (value == null || value.isEmpty) {
             return 'Пожалуйста, заполните поле';
+          }
+          if (isPhoneNumber &&
+              !RegExp(r'^\+998 \(\d{2}\) \d{3} \d{2} \d{2}$').hasMatch(value)) {
+            return 'Неверный формат номера телефона';
           }
           return null;
         },

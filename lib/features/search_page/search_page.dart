@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:intl/intl.dart'; // To format and parse dates
 import 'package:tanishuvlar/features/chat_page/chat_detail_page.dart';
 
 class SearchPage extends StatefulWidget {
@@ -11,19 +12,15 @@ class SearchPage extends StatefulWidget {
 }
 
 class _SearchPageState extends State<SearchPage> {
-  // Контроллер для поиска по имени и фамилии
   final TextEditingController _searchController = TextEditingController();
 
-  // Пол, цель общения, область
   String? _selectedGender;
   String? _selectedCommunicationGoal;
   String? _selectedRegion;
 
-  // Список пользователей
   List<DocumentSnapshot> _allUsers = [];
   List<DocumentSnapshot> _filteredUsers = [];
 
-  // Опции для выпадающих списков
   final List<String> _genders = ['Мужчина', 'Женщина', 'Другой'];
   final List<String> _communicationGoals = [
     'Просто так',
@@ -32,40 +29,42 @@ class _SearchPageState extends State<SearchPage> {
     'Завести семью'
   ];
   final List<String> _regions = [
-    'Ташкент',
-    'Самарканд',
-    'Фергана',
+    'Каракалпакстан Р',
     'Андижан',
-    'Другой'
+    'Бухара',
+    'Джизах',
+    'Кашкадарья',
+    'Наманган',
+    'Наваи',
+    'Самарканд',
+    'Сурхандарья',
+    'Сирдарья',
+    'город Ташкент',
+    'Ташкент обл',
+    'Фергана',
+    'Хорезм'
   ];
 
-  // Получение текущего пользователя
   final User? currentUser = FirebaseAuth.instance.currentUser;
 
   @override
   void initState() {
     super.initState();
-
-    // Загружаем всех пользователей из Firestore при инициализации
     _loadAllUsers();
-
-    // Обновляем результаты при изменении текста поиска
     _searchController.addListener(() {
       _filterUsers();
     });
   }
 
-  // Метод для загрузки всех пользователей
   Future<void> _loadAllUsers() async {
     QuerySnapshot snapshot =
         await FirebaseFirestore.instance.collection('profiles').get();
     setState(() {
-      _allUsers = snapshot.docs; // Сохраняем всех пользователей
-      _filteredUsers = List.from(_allUsers); // Изначально показываем всех
+      _allUsers = snapshot.docs;
+      _filteredUsers = List.from(_allUsers);
     });
   }
 
-  // Метод для фильтрации пользователей на клиенте
   void _filterUsers() {
     String searchText = _searchController.text.trim().toLowerCase();
 
@@ -78,23 +77,22 @@ class _SearchPageState extends State<SearchPage> {
         final communicationGoal = data['communicationGoal'] ?? '';
         final region = data['region'] ?? '';
 
-        // Фильтрация по имени или фамилии
+        // Fetching birthDate
+        final birthDateStr = data['birthDate'] ?? '';
+        int? age = _calculateAgeFromBirthDate(birthDateStr);
+
         bool matchesName =
             firstName.contains(searchText) || lastName.contains(searchText);
 
-        // Фильтрация по полу
         bool matchesGender =
             _selectedGender == null || _selectedGender == gender;
 
-        // Фильтрация по цели общения
         bool matchesCommunicationGoal = _selectedCommunicationGoal == null ||
             _selectedCommunicationGoal == communicationGoal;
 
-        // Фильтрация по области проживания
         bool matchesRegion =
             _selectedRegion == null || _selectedRegion == region;
 
-        // Возвращаем true, если все условия выполняются
         return matchesName &&
             matchesGender &&
             matchesCommunicationGoal &&
@@ -103,7 +101,27 @@ class _SearchPageState extends State<SearchPage> {
     });
   }
 
-  // Метод для отображения результатов
+  // Method to calculate age from birthDate
+  int? _calculateAgeFromBirthDate(String birthDateStr) {
+    if (birthDateStr.isEmpty) return null;
+
+    try {
+      DateTime birthDate = DateFormat('dd.MM.yyyy').parse(birthDateStr);
+      DateTime today = DateTime.now();
+      int age = today.year - birthDate.year;
+
+      if (today.month < birthDate.month ||
+          (today.month == birthDate.month && today.day < birthDate.day)) {
+        age--;
+      }
+
+      return age;
+    } catch (e) {
+      print('Error parsing birth date: $e');
+      return null;
+    }
+  }
+
   Widget _buildUserList() {
     if (_filteredUsers.isEmpty) {
       return const Center(child: Text('Пользователи не найдены.'));
@@ -117,7 +135,11 @@ class _SearchPageState extends State<SearchPage> {
         final lastName = userData['lastName'] ?? '';
         final gender = userData['gender'] ?? 'Не указано';
         final region = userData['region'] ?? 'Не указано';
-        final userEmail = _filteredUsers[index].id; // email as document ID
+        final birthDate = userData['birthDate'] ?? 'Не указано';
+        final userEmail = _filteredUsers[index].id; // Email as document ID
+
+        // Calculate age
+        int? age = _calculateAgeFromBirthDate(birthDate);
 
         return ListTile(
           leading: CircleAvatar(
@@ -128,17 +150,16 @@ class _SearchPageState extends State<SearchPage> {
             ),
           ),
           title: Text('$name $lastName'),
-          subtitle: Text('Пол: $gender\nОбласть: $region'),
+          subtitle: Text(
+              'Пол: $gender\nВозраст: ${age ?? "Не указано"}\nОбласть: $region'),
           onTap: () {
-            _handleUserTap(
-                context, currentUser!.email!, userEmail); // Переход в чат
+            _handleUserTap(context, currentUser!.email!, userEmail);
           },
         );
       },
     );
   }
 
-  // Метод для обработки нажатия на пользователя
   Future<void> _handleUserTap(
       BuildContext context, String currentUserEmail, String userEmail) async {
     QuerySnapshot chatSnapshot = await FirebaseFirestore.instance
@@ -188,14 +209,13 @@ class _SearchPageState extends State<SearchPage> {
     }
   }
 
-  // Метод для очистки всех полей
   void _clearFilters() {
     setState(() {
-      _searchController.clear(); // Очистка текстового поля
-      _selectedGender = null; // Сброс выбора пола
-      _selectedCommunicationGoal = null; // Сброс выбора цели общения
-      _selectedRegion = null; // Сброс региона
-      _filteredUsers = List.from(_allUsers); // Показ всех пользователей
+      _searchController.clear();
+      _selectedGender = null;
+      _selectedCommunicationGoal = null;
+      _selectedRegion = null;
+      _filteredUsers = List.from(_allUsers);
     });
   }
 
@@ -207,7 +227,7 @@ class _SearchPageState extends State<SearchPage> {
         actions: [
           IconButton(
             icon: const Icon(Icons.clear),
-            onPressed: _clearFilters, // Кнопка для очистки всех фильтров
+            onPressed: _clearFilters,
           ),
         ],
       ),
@@ -239,7 +259,7 @@ class _SearchPageState extends State<SearchPage> {
               onChanged: (newValue) {
                 setState(() {
                   _selectedGender = newValue;
-                  _filterUsers(); // Фильтрация при изменении
+                  _filterUsers();
                 });
               },
             ),
@@ -259,7 +279,7 @@ class _SearchPageState extends State<SearchPage> {
               onChanged: (newValue) {
                 setState(() {
                   _selectedCommunicationGoal = newValue;
-                  _filterUsers(); // Фильтрация при изменении
+                  _filterUsers();
                 });
               },
             ),
@@ -279,7 +299,7 @@ class _SearchPageState extends State<SearchPage> {
               onChanged: (newValue) {
                 setState(() {
                   _selectedRegion = newValue;
-                  _filterUsers(); // Фильтрация при изменении
+                  _filterUsers();
                 });
               },
             ),

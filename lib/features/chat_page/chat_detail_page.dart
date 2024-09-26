@@ -1,11 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:intl/intl.dart'; // Для форматирования времени
 
 class ChatDetailPage extends StatefulWidget {
   final String chatId;
-  final String userId;
-  final String chatUserName;
+  final String userId; // Email of the user (used to fetch the user's name)
+  final String
+      chatUserName; // Email passed from the chat list (we'll replace it with the actual name)
 
   const ChatDetailPage(
       {super.key,
@@ -108,6 +110,9 @@ class _ChatDetailPageState extends State<ChatDetailPage> {
         'status': 'read',
       });
     }
+    await _firestore.collection('chats').doc(widget.chatId).update({
+      'lastMessageStatus': 'read', // Обновляем статус последнего сообщения
+    });
   }
 
   @override
@@ -125,12 +130,16 @@ class _ChatDetailPageState extends State<ChatDetailPage> {
               return Text('Чат с ${widget.chatUserName}');
             }
 
+            // Get the user's name from the Firestore data
             var userData = snapshot.data!.data() as Map<String, dynamic>;
+            String userName = userData['firstName'] ??
+                widget
+                    .chatUserName; // Default to email if name is not available
             bool isUserActiveInChat = userData['isActive'] == true &&
                 userData['chatId'] == widget.chatId;
 
             return Text(
-              'Чат с ${widget.chatUserName} ${isUserActiveInChat ? "(online)" : ""}',
+              'Чат с $userName ${isUserActiveInChat ? "(online)" : ""}',
             );
           },
         ),
@@ -171,9 +180,21 @@ class _ChatDetailPageState extends State<ChatDetailPage> {
 
                     String message = messageData['message'];
                     String status = messageData['status'];
+                    var timestamp = messageData['timestamp']; // Can be null
+
+                    // Default value if the timestamp is null
+                    String formattedTime = "Unknown Time";
+
+                    // If timestamp is not null, format it to a readable time
+                    if (timestamp != null && timestamp is Timestamp) {
+                      formattedTime =
+                          DateFormat.Hm().format(timestamp.toDate());
+                    }
+
                     bool isMe = messageData['senderId'] == currentUserEmail;
 
-                    return _buildMessage(message, isMe, status);
+                    // Now pass the formattedTime to your _buildMessage method
+                    return _buildMessage(message, isMe, status, formattedTime);
                   },
                 );
               },
@@ -212,7 +233,7 @@ class _ChatDetailPageState extends State<ChatDetailPage> {
     );
   }
 
-  Widget _buildMessage(String message, bool isMe, String status) {
+  Widget _buildMessage(String message, bool isMe, String status, String time) {
     IconData messageStatusIcon = status == 'read' ? Icons.done_all : Icons.done;
 
     return Container(
@@ -222,9 +243,9 @@ class _ChatDetailPageState extends State<ChatDetailPage> {
           : const EdgeInsets.only(left: 16.0, right: 80.0),
       child: Align(
         alignment: isMe ? Alignment.centerRight : Alignment.centerLeft,
-        child: Row(
-          mainAxisAlignment:
-              isMe ? MainAxisAlignment.end : MainAxisAlignment.start,
+        child: Column(
+          crossAxisAlignment:
+              isMe ? CrossAxisAlignment.end : CrossAxisAlignment.start,
           children: [
             Container(
               decoration: BoxDecoration(
@@ -239,15 +260,28 @@ class _ChatDetailPageState extends State<ChatDetailPage> {
                 ),
               ),
             ),
-            if (isMe)
-              Padding(
-                padding: const EdgeInsets.only(left: 8.0),
-                child: Icon(
-                  messageStatusIcon,
-                  size: 16.0,
-                  color: status == 'read' ? Colors.blue : Colors.grey,
+            Row(
+              mainAxisAlignment:
+                  isMe ? MainAxisAlignment.end : MainAxisAlignment.start,
+              children: [
+                Text(
+                  time, // Display the formatted time
+                  style: const TextStyle(
+                    fontSize: 12,
+                    color: Colors.grey,
+                  ),
                 ),
-              ),
+                if (isMe)
+                  Padding(
+                    padding: const EdgeInsets.only(left: 8.0),
+                    child: Icon(
+                      messageStatusIcon,
+                      size: 16.0,
+                      color: status == 'read' ? Colors.blue : Colors.grey,
+                    ),
+                  ),
+              ],
+            ),
           ],
         ),
       ),

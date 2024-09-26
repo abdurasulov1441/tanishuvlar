@@ -62,13 +62,33 @@ class ChatPage extends StatelessWidget {
                     lastMessage; // Если отправитель - собеседник
               }
 
+              // Проверяем статус последнего сообщения
+              String messageStatus =
+                  chatData['lastMessageStatus'] ?? 'delivered';
+              IconData messageStatusIcon =
+                  messageStatus == 'read' ? Icons.done_all : Icons.done;
+
               return ListTile(
                 leading: const CircleAvatar(child: Icon(Icons.person)),
                 title: Text(
                     'Чат с $chatPartnerEmail'), // Показываем почту собеседника
-                subtitle: Text(
-                  '$lastMessageDisplay\n$formattedTime',
-                ), // Последнее сообщение и время
+                subtitle: Row(
+                  children: [
+                    Expanded(
+                      child: Text(
+                        '$lastMessageDisplay\n$formattedTime',
+                      ),
+                    ),
+                    if (lastSender ==
+                        currentUserEmail) // Отображаем галочки только для сообщений, отправленных текущим пользователем
+                      Icon(
+                        messageStatusIcon,
+                        size: 16.0,
+                        color:
+                            messageStatus == 'read' ? Colors.blue : Colors.grey,
+                      ),
+                  ],
+                ), // Последнее сообщение и время с галочками
                 onTap: () {
                   Navigator.push(
                     context,
