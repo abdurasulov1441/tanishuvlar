@@ -79,7 +79,7 @@ class _SearchPageState extends State<SearchPage> {
 
         // Fetching birthDate
         final birthDateStr = data['birthDate'] ?? '';
-        int? age = _calculateAgeFromBirthDate(birthDateStr);
+        _calculateAgeFromBirthDate(birthDateStr);
 
         bool matchesName =
             firstName.contains(searchText) || lastName.contains(searchText);
