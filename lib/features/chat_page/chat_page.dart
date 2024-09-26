@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'chat_detail_page.dart';
-import 'package:intl/intl.dart'; // Для форматирования времени
+import 'package:intl/intl.dart'; // Vaqtni formatlash uchun
 
 class ChatPage extends StatelessWidget {
   const ChatPage({super.key});
@@ -13,13 +13,13 @@ class ChatPage extends StatelessWidget {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Чаты'),
+        title: const Text('Chatlar'),
       ),
       body: StreamBuilder<QuerySnapshot>(
         stream: FirebaseFirestore.instance
             .collection('chats')
             .where('participants', arrayContains: currentUserEmail)
-            .orderBy('timestamp', descending: true) // Сортировка по времени
+            .orderBy('timestamp', descending: true) // Vaqt bo'yicha tartiblash
             .snapshots(),
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
@@ -27,7 +27,7 @@ class ChatPage extends StatelessWidget {
           }
 
           if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
-            return const Center(child: Text('Нет активных чатов.'));
+            return const Center(child: Text('Faol chatlar yo\'q.'));
           }
 
           final chatDocs = snapshot.data!.docs;
@@ -39,39 +39,39 @@ class ChatPage extends StatelessWidget {
               final chatData = chatDoc.data() as Map<String, dynamic>;
               final participants = chatData['participants'] as List<dynamic>;
 
-              // Находим почту собеседника
+              // Suhbatdoshning emailini topamiz
               final chatPartnerEmail =
                   participants.firstWhere((email) => email != currentUserEmail);
 
-              // Последнее сообщение и его отправитель
+              // Oxirgi xabar va uning yuboruvchisi
               final lastMessage = chatData['lastMessage'] ?? '';
               final lastSender = chatData['lastSender'] ?? '';
 
-              // Форматируем время последнего сообщения
+              // Oxirgi xabar vaqtini formatlash
               final timestamp =
                   chatData['timestamp'] as Timestamp? ?? Timestamp.now();
               final formattedTime = DateFormat.Hm().format(timestamp.toDate());
 
-              // Подготавливаем текст для последнего сообщения
+              // Oxirgi xabar uchun matn tayyorlash
               String lastMessageDisplay;
               if (lastSender == currentUserEmail) {
                 lastMessageDisplay =
-                    'Вы: $lastMessage'; // Если отправитель - текущий пользователь
+                    'Siz: $lastMessage'; // Agar yuboruvchi joriy foydalanuvchi bo'lsa
               } else {
                 lastMessageDisplay =
-                    lastMessage; // Если отправитель - собеседник
+                    lastMessage; // Agar yuboruvchi suhbatdosh bo'lsa
               }
 
-              // Проверяем статус последнего сообщения
+              // Oxirgi xabar holatini tekshirish
               String messageStatus =
-                  chatData['lastMessageStatus'] ?? 'delivered';
+                  chatData['lastMessageStatus'] ?? 'yetkazilgan';
               IconData messageStatusIcon =
                   messageStatus == 'read' ? Icons.done_all : Icons.done;
 
               return ListTile(
                 leading: const CircleAvatar(child: Icon(Icons.person)),
                 title: Text(
-                    'Чат с $chatPartnerEmail'), // Показываем почту собеседника
+                    '$chatPartnerEmail bilan chat'), // Suhbatdoshning emailini ko'rsatish
                 subtitle: Row(
                   children: [
                     Expanded(
@@ -80,7 +80,7 @@ class ChatPage extends StatelessWidget {
                       ),
                     ),
                     if (lastSender ==
-                        currentUserEmail) // Отображаем галочки только для сообщений, отправленных текущим пользователем
+                        currentUserEmail) // Galachalar faqat foydalanuvchi yuborgan xabarlar uchun ko'rsatiladi
                       Icon(
                         messageStatusIcon,
                         size: 16.0,
@@ -88,13 +88,13 @@ class ChatPage extends StatelessWidget {
                             messageStatus == 'read' ? Colors.blue : Colors.grey,
                       ),
                   ],
-                ), // Последнее сообщение и время с галочками
+                ), // Oxirgi xabar va vaqt bilan galachalar
                 onTap: () {
                   Navigator.push(
                     context,
                     MaterialPageRoute(
                       builder: (context) => ChatDetailPage(
-                        chatId: chatDoc.id, // Передаем chatId
+                        chatId: chatDoc.id, // chatId ni uzatish
                         userId: chatPartnerEmail,
                         chatUserName: chatPartnerEmail,
                       ),

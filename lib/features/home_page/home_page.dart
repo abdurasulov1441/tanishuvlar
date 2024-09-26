@@ -12,7 +12,7 @@ class HomePage extends StatelessWidget {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Новые пользователи'),
+        title: const Text('Yangi foydalanuvchilar'),
       ),
       body: StreamBuilder<QuerySnapshot>(
         stream: FirebaseFirestore.instance.collection('profiles').snapshots(),
@@ -22,7 +22,7 @@ class HomePage extends StatelessWidget {
           }
 
           if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
-            return const Center(child: Text('Нет новых пользователей.'));
+            return const Center(child: Text('Yangi foydalanuvchilar yo\'q.'));
           }
 
           final users = snapshot.data!.docs;
@@ -32,29 +32,29 @@ class HomePage extends StatelessWidget {
             itemBuilder: (context, index) {
               final userData = users[index].data() as Map<String, dynamic>;
               final userEmail =
-                  users[index].id; // Используем id документа как email
-              final firstName = userData['firstName'] ?? 'Не указано';
+                  users[index].id; // Email sifatida hujjatning IDsi ishlatiladi
+              final firstName = userData['firstName'] ?? 'Kiritilmagan';
               final lastName = userData['lastName'] ?? '';
-              final birthDate = userData['birthDate'] ?? 'Не указано';
-              final gender = userData['gender'] ?? 'Не указано';
+              final birthDate = userData['birthDate'] ?? 'Kiritilmagan';
+              final gender = userData['gender'] ?? 'Kiritilmagan';
 
-              // Исключаем текущего пользователя из списка
+              // Joriy foydalanuvchini ro'yxatdan chiqarish
               if (userEmail == currentUserEmail) {
-                return const SizedBox(); // Пропускаем текущего пользователя
+                return const SizedBox(); // Joriy foydalanuvchini o\'tkazib yuborish
               }
 
               return ListTile(
                 leading: CircleAvatar(
-                  backgroundColor: gender == 'Женщина'
-                      ? Colors.pinkAccent
-                      : Colors.blueAccent,
+                  backgroundColor:
+                      gender == 'Ayol' ? Colors.pinkAccent : Colors.blueAccent,
                   child: Text(
                     firstName[0].toUpperCase(),
                     style: const TextStyle(color: Colors.white),
                   ),
                 ),
-                title: Text('$firstName $lastName'), // Показ имени и фамилии
-                subtitle: Text('Дата рождения: $birthDate\nПол: $gender'),
+                title: Text(
+                    '$firstName $lastName'), // Ism va familiya ko\'rsatiladi
+                subtitle: Text('Tug\'ilgan sana: $birthDate\nJinsi: $gender'),
                 onTap: () {
                   _handleUserTap(context, currentUserEmail!, userEmail);
                 },
@@ -66,10 +66,10 @@ class HomePage extends StatelessWidget {
     );
   }
 
-  // Проверка, есть ли уже чат, если нет — создаем его
+  // Mavjud chat borligini tekshirish, yo'q bo'lsa yangi chat yaratish
   Future<void> _handleUserTap(
       BuildContext context, String currentUserEmail, String userEmail) async {
-    // Поиск существующего чата с текущим пользователем и собеседником
+    // Joriy foydalanuvchi va suhbatdosh bilan mavjud chatni qidirish
     QuerySnapshot chatSnapshot = await FirebaseFirestore.instance
         .collection('chats')
         .where('participants', arrayContains: currentUserEmail)
@@ -77,43 +77,45 @@ class HomePage extends StatelessWidget {
 
     DocumentSnapshot? existingChat;
 
-    // Проверка, есть ли чат с собеседником
+    // Suhbatdosh bilan chat borligini tekshirish
     for (var doc in chatSnapshot.docs) {
       var participants = doc['participants'] as List;
       if (participants.contains(userEmail)) {
-        existingChat = doc; // Сохраняем DocumentSnapshot, а не Map
+        existingChat = doc; // DocumentSnapshot saqlanadi, Map emas
         break;
       }
     }
 
     if (existingChat != null) {
-      // Если чат уже существует, переходим в него
+      // Agar chat mavjud bo'lsa, unga o'tish
       Navigator.push(
         context,
         MaterialPageRoute(
           builder: (context) => ChatDetailPage(
-            chatId: existingChat!
-                .id, // Используем existingChat.id для получения ID документа
-            userId: userEmail, // Почта собеседника
-            chatUserName: userEmail, // Отображаемая почта
+            chatId: existingChat!.id, // Hujjatning IDsi orqali chatga o\'tish
+            userId: userEmail, // Suhbatdoshning emaili
+            chatUserName: userEmail, // Email ko\'rsatiladi
           ),
         ),
       );
     } else {
-      // Если чата нет, создаем новый
+      // Agar chat yo'q bo'lsa, yangi chat yaratish
       DocumentReference newChat =
           await FirebaseFirestore.instance.collection('chats').add({
-        'participants': [currentUserEmail, userEmail], // Добавляем обе почты
-        'lastMessage': '', // Пустое последнее сообщение при создании
+        'participants': [
+          currentUserEmail,
+          userEmail
+        ], // Ikkala email qo\'shiladi
+        'lastMessage': '', // Chat yaratilganda oxirgi xabar bo'sh bo'ladi
         'timestamp': FieldValue.serverTimestamp(),
       });
 
-      // Переход в новый чат
+      // Yangi chatga o'tish
       Navigator.push(
         context,
         MaterialPageRoute(
           builder: (context) => ChatDetailPage(
-            chatId: newChat.id, // Используем ID нового чата
+            chatId: newChat.id, // Yangi chatning IDsi
             userId: userEmail,
             chatUserName: userEmail,
           ),

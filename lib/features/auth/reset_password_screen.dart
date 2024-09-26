@@ -1,12 +1,9 @@
-
 import 'package:email_validator/email_validator.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:tanishuvlar/services/snack_bar.dart';
 import 'package:tanishuvlar/style/app_colors.dart';
 import 'package:tanishuvlar/style/app_style.dart';
-
-
 
 class ResetPasswordScreen extends StatefulWidget {
   const ResetPasswordScreen({super.key});
@@ -22,7 +19,6 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
   @override
   void dispose() {
     emailTextInputController.dispose();
-
     super.dispose();
   }
 
@@ -37,19 +33,17 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
       await FirebaseAuth.instance
           .sendPasswordResetEmail(email: emailTextInputController.text.trim());
     } on FirebaseAuthException catch (e) {
-      print(e.code);
-
       if (e.code == 'user-not-found') {
         SnackBarService.showSnackBar(
           context,
-          'Такой email незарегистрирован!',
+          'Bunday email ro\'yxatdan o\'tmagan!',
           true,
         );
         return;
       } else {
         SnackBarService.showSnackBar(
           context,
-          'Неизвестная ошибка! Попробуйте еще раз или обратитесь в поддержку.',
+          'Noma\'lum xato! Qayta urinib ko\'ring yoki qo\'llab-quvvatlashga murojaat qiling.',
           true,
         );
         return;
@@ -57,7 +51,8 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
     }
 
     const snackBar = SnackBar(
-      content: Text('Сброс пароля осуществен. Проверьте почту'),
+      content:
+          Text('Parolni tiklash amalga oshirildi. Pochtangizni tekshiring'),
       backgroundColor: Colors.green,
     );
 
@@ -74,7 +69,7 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
       appBar: AppBar(
         backgroundColor: AppColors.headerColor,
         title: const Text(
-          'Сброс пароля',
+          'Parolni tiklash',
           style: AppStyle.fontStyle,
         ),
       ),
@@ -91,11 +86,11 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
                 controller: emailTextInputController,
                 validator: (email) =>
                     email != null && !EmailValidator.validate(email)
-                        ? 'Введите правильный Email'
+                        ? 'To\'g\'ri email kiriting'
                         : null,
                 decoration: const InputDecoration(
                   border: OutlineInputBorder(),
-                  hintText: 'Введите Email',
+                  hintText: 'Emailingizni kiriting',
                   hintStyle: AppStyle.fontStyle,
                 ),
               ),
@@ -106,7 +101,7 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
                 onPressed: resetPassword,
                 child: const Center(
                     child: Text(
-                  'Сбросить пароль',
+                  'Parolni tiklash',
                   style: AppStyle.fontStyle,
                 )),
               ),

@@ -34,19 +34,19 @@ class _MainPageState extends State<MainPage> {
     });
   }
 
-  // Исправляем функцию для корректной навигации к чату
+  // Funksiyani to'g'ri chatga o'tish uchun tuzatish
   void _navigateToChat(String chatId, String userEmail) {
     setState(() {
-      _selectedIndex = 2; // Переключаемся на вкладку чата
+      _selectedIndex = 2; // Chat bo'limiga o'tish
     });
 
     Navigator.push(
       context,
       MaterialPageRoute(
         builder: (context) => ChatDetailPage(
-          chatId: chatId, // Передаем ID чата
-          userId: userEmail, // Почта собеседника
-          chatUserName: userEmail, // Имя собеседника (почта)
+          chatId: chatId, // Chat IDni o'tkazish
+          userId: userEmail, // Suhbatdoshning emaili
+          chatUserName: userEmail, // Suhbatdoshning ismi (email)
         ),
       ),
     );
@@ -61,11 +61,11 @@ class _MainPageState extends State<MainPage> {
       ),
       bottomNavigationBar: BottomNavigationBar(
         items: const <BottomNavigationBarItem>[
-          BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Главная'),
-          BottomNavigationBarItem(icon: Icon(Icons.search), label: 'Поиск'),
-          BottomNavigationBarItem(icon: Icon(Icons.chat), label: 'Чат'),
+          BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Asosiy'),
+          BottomNavigationBarItem(icon: Icon(Icons.search), label: 'Qidiruv'),
+          BottomNavigationBarItem(icon: Icon(Icons.chat), label: 'Chat'),
           BottomNavigationBarItem(
-              icon: Icon(Icons.account_circle), label: 'Профиль'),
+              icon: Icon(Icons.account_circle), label: 'Profil'),
         ],
         currentIndex: _selectedIndex,
         selectedItemColor: Colors.blue,

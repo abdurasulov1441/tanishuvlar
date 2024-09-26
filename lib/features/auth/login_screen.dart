@@ -44,22 +44,18 @@ class _LoginScreenState extends State<LoginScreen> {
         password: passwordTextInputController.text.trim(),
       );
     } on FirebaseAuthException catch (e) {
-      print(e.code);
-
       if (e.code == 'user-not-found' || e.code == 'wrong-password') {
         SnackBarService.showSnackBar(
           context,
-          'Invalid email or password. try again later',
+          'Noto\'g\'ri email yoki parol. Qayta urinib ko\'ring.',
           true,
         );
-        return;
       } else {
         SnackBarService.showSnackBar(
           context,
-          'Uncorectly mistake! try again later.',
+          'Noma\'lum xato. Iltimos keyinroq qayta urinib ko\'ring.',
           true,
         );
-        return;
       }
     }
 
@@ -69,179 +65,115 @@ class _LoginScreenState extends State<LoginScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Padding(
-        padding: const EdgeInsets.all(30.0),
-        child: Form(
-          key: formKey,
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              const SizedBox(
-                height: 20,
-              ),
-              Column(
-                mainAxisAlignment: MainAxisAlignment.start,
-                children: [
-                  Text(
-                    'Welcome !',
-                    style: AppStyle.fontStyle.copyWith(
-                        color: Colors.white,
-                        fontSize: 25,
-                        fontWeight: FontWeight.bold),
-                  ),
-                  const SizedBox(
-                    height: 10,
-                  ),
-                  Text(
-                    'You can sign in',
-                    style: AppStyle.fontStyle
-                        .copyWith(color: AppColors.dividerColor),
-                  ),
-                  const SizedBox(
-                    height: 10,
-                  ),
-                  ClipRRect(
-                    borderRadius: const BorderRadius.all(Radius.circular(10)),
+      backgroundColor: const Color(0xFF1F1F1F),
+      body: SingleChildScrollView(
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 30, vertical: 100),
+          child: Form(
+            key: formKey,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Center(
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(50),
                     child: Image.asset(
-                      'assets/images/logo.jpg',
+                      'assets/images/logo.png',
                       width: 100,
                       height: 100,
                     ),
                   ),
-                  Text(
-                    'Free Movies'.toUpperCase(),
-                    style: AppStyle.fontStyle.copyWith(
-                        fontSize: 25,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.white),
+                ),
+                const SizedBox(height: 20),
+                Text(
+                  'Xush kelibsiz!',
+                  style: AppStyle.fontStyle.copyWith(
+                      color: Colors.white,
+                      fontSize: 28,
+                      fontWeight: FontWeight.bold),
+                ),
+                const SizedBox(height: 10),
+                Text(
+                  'Hisobingizga kiring',
+                  style: AppStyle.fontStyle
+                      .copyWith(color: Colors.grey[500], fontSize: 16),
+                ),
+                const SizedBox(height: 30),
+                TextFormField(
+                  style: const TextStyle(color: Colors.white),
+                  controller: emailTextInputController,
+                  decoration: InputDecoration(
+                    filled: true,
+                    fillColor: Colors.grey[800],
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(15),
+                      borderSide: BorderSide.none,
+                    ),
+                    hintText: 'Emailingizni kiriting',
+                    hintStyle: TextStyle(color: Colors.grey[400]),
                   ),
-                  const SizedBox(
-                    height: 10,
-                  ),
-                  Row(
-                    children: [
-                      Text(
-                        'Email',
-                        style: AppStyle.fontStyle.copyWith(
-                            fontWeight: FontWeight.bold, color: Colors.white),
-                      )
-                    ],
-                  ),
-                  const SizedBox(
-                    height: 5,
-                  ),
-                  TextFormField(
-                    style: const TextStyle(color: AppColors.dividerColor),
-                    keyboardType: TextInputType.emailAddress,
-                    autocorrect: false,
-                    controller: emailTextInputController,
-                    validator: (email) =>
-                        email != null && !EmailValidator.validate(email)
-                            ? 'Enter corectly email'
-                            : null,
-                    decoration: InputDecoration(
-                      border: const OutlineInputBorder(
-                          borderRadius: BorderRadius.all(Radius.circular(15))),
-                      hintText: 'Enter email',
-                      hintStyle:
-                          AppStyle.fontStyle.copyWith(color: Colors.white),
-                      label: const Icon(
-                        Icons.mail,
-                        color: Color.fromARGB(255, 209, 209, 209),
+                  validator: (email) =>
+                      email != null && !EmailValidator.validate(email)
+                          ? 'To\'g\'ri email kiriting'
+                          : null,
+                ),
+                const SizedBox(height: 20),
+                TextFormField(
+                  style: const TextStyle(color: Colors.white),
+                  controller: passwordTextInputController,
+                  obscureText: isHiddenPassword,
+                  decoration: InputDecoration(
+                    filled: true,
+                    fillColor: Colors.grey[800],
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(15),
+                      borderSide: BorderSide.none,
+                    ),
+                    hintText: 'Parolingizni kiriting',
+                    hintStyle: TextStyle(color: Colors.grey[400]),
+                    suffixIcon: IconButton(
+                      icon: Icon(
+                        isHiddenPassword
+                            ? Icons.visibility_off
+                            : Icons.visibility,
+                        color: Colors.white,
                       ),
+                      onPressed: togglePasswordView,
                     ),
                   ),
-                  const SizedBox(height: 30),
-                  Row(
-                    children: [
-                      Text(
-                        'Password',
-                        style: AppStyle.fontStyle.copyWith(
-                            fontWeight: FontWeight.bold, color: Colors.white),
-                      )
-                    ],
-                  ),
-                  const SizedBox(
-                    height: 5,
-                  ),
-                  TextFormField(
-                    style: const TextStyle(color: AppColors.dividerColor),
-                    autocorrect: false,
-                    controller: passwordTextInputController,
-                    obscureText: isHiddenPassword,
-                    validator: (value) => value != null && value.length < 6
-                        ? 'min 6 symbols'
-                        : null,
-                    autovalidateMode: AutovalidateMode.onUserInteraction,
-                    decoration: InputDecoration(
-                      border: const OutlineInputBorder(
-                          borderRadius: BorderRadius.all(Radius.circular(15))),
-                      hintText: 'Enter password',
-                      hintStyle:
-                          AppStyle.fontStyle.copyWith(color: Colors.white),
-                      label: const Icon(
-                        Icons.lock,
-                        color: Color.fromARGB(255, 209, 209, 209),
-                      ),
-                      suffix: InkWell(
-                        onTap: togglePasswordView,
-                        child: Icon(
-                          isHiddenPassword
-                              ? Icons.visibility_off
-                              : Icons.visibility,
-                          color: Colors.black,
-                        ),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 30),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.end,
-                    children: [
-                      TextButton(
-                        onPressed: () =>
-                            Navigator.of(context).pushNamed('/reset_password'),
-                        child: Text(
-                          'Forgot password?',
-                          style: AppStyle.fontStyle.copyWith(
-                            color: const Color.fromARGB(255, 209, 209, 209),
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                  ElevatedButton(
+                  validator: (value) => value != null && value.length < 6
+                      ? 'Parol kamida 6 belgidan iborat bo\'lishi kerak'
+                      : null,
+                ),
+                const SizedBox(height: 20),
+                Center(
+                  child: ElevatedButton(
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color.fromARGB(255, 46, 46, 46),
+                      backgroundColor: const Color(0xFF4CAF50),
+                      minimumSize: const Size(double.infinity, 50),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(15),
+                      ),
                     ),
                     onPressed: login,
-                    child: Center(
-                        child: Text(
-                      'Sing in',
-                      style: AppStyle.fontStyle.copyWith(
-                          color: AppColors.backgroundColor,
-                          fontWeight: FontWeight.bold),
-                    )),
+                    child: Text(
+                      'Kirish',
+                      style: AppStyle.fontStyle.copyWith(color: Colors.white),
+                    ),
                   ),
-                ],
-              ),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Text(
-                    'Do\'nt have an account?',
-                    style: AppStyle.fontStyle.copyWith(color: Colors.white),
-                  ),
-                  TextButton(
+                ),
+                const SizedBox(height: 20),
+                Center(
+                  child: TextButton(
                     onPressed: () => Navigator.of(context).pushNamed('/signup'),
-                    child: Text('Sing up',
-                        style: AppStyle.fontStyle.copyWith(
-                          color: const Color.fromARGB(255, 209, 209, 209),
-                        )),
+                    child: Text(
+                      'Hisobingiz yo\'qmi? Ro\'yxatdan o\'ting',
+                      style: AppStyle.fontStyle.copyWith(color: Colors.white),
+                    ),
                   ),
-                ],
-              )
-            ],
+                ),
+              ],
+            ),
           ),
         ),
       ),

@@ -44,29 +44,29 @@ class _DisplayProfilePageState extends State<DisplayProfilePage> {
   String? _selectedGender;
   String? _selectedCommunicationGoal;
 
-  final List<String> _genders = ['Мужчина', 'Женщина', 'Другой'];
+  final List<String> _genders = ['Erkak', 'Ayol', 'Boshqa'];
   final List<String> _communicationGoals = [
-    'Просто так',
-    'Дружба',
-    'Поиск любви',
-    'Завести семью'
+    'Oddiy suhbat',
+    'Do\'stlik',
+    'Sevgi izlash',
+    'Oila qurish'
   ];
 
   final List<String> _regions = [
-    'Каракалпакстан Р',
-    'Андижан',
-    'Бухара',
-    'Джизах',
-    'Кашкадарья',
-    'Наманган',
-    'Наваи',
-    'Самарканд',
-    'Сурхандарья',
-    'Сирдарья',
-    'город Ташкент',
-    'Ташкент обл',
-    'Фергана',
-    'Хорезм'
+    'Qoraqalpog\'iston R.',
+    'Andijon',
+    'Buxoro',
+    'Jizzax',
+    'Qashqadaryo',
+    'Namangan',
+    'Navoiy',
+    'Samarqand',
+    'Surxondaryo',
+    'Sirdaryo',
+    'Toshkent sh.',
+    'Toshkent vil.',
+    'Farg\'ona',
+    'Xorazm'
   ];
 
   @override
@@ -105,7 +105,7 @@ class _DisplayProfilePageState extends State<DisplayProfilePage> {
         });
       }
     } catch (e) {
-      print('Ошибка загрузки профиля: $e');
+      print('Profilni yuklashda xatolik: $e');
       setState(() {
         isLoading = false;
       });
@@ -130,7 +130,7 @@ class _DisplayProfilePageState extends State<DisplayProfilePage> {
         });
         _loadUserProfile();
       } catch (e) {
-        print('Ошибка сохранения профиля: $e');
+        print('Profilni saqlashda xatolik: $e');
       }
     }
   }
@@ -150,27 +150,27 @@ class _DisplayProfilePageState extends State<DisplayProfilePage> {
     }
   }
 
-  // Phone number formatter to format phone numbers like +998 (XX) XXX XX XX
+  // Telefon raqami formatlovi (+998 (XX) XXX XX XX kabi formatlash uchun)
   final _phoneNumberFormatter = TextInputFormatter.withFunction(
     (oldValue, newValue) {
       if (newValue.text.isEmpty) {
         return newValue.copyWith(text: '+998 ');
       }
 
-      // Remove all non-digit characters, except '+' at the beginning
+      // Barcha raqam bo'lmagan belgilarni olib tashlash (faqat '+' qoldiriladi)
       String digits = newValue.text.replaceAll(RegExp(r'[^\d+]'), '');
 
-      // Ensure it starts with +998
+      // +998 dan boshlanishini ta'minlaymiz
       if (!digits.startsWith('+998')) {
         digits = '+998';
       }
 
-      // Limiting the input to match the format
+      // Limit to +998 XXX XX XX
       if (digits.length > 13) {
-        digits = digits.substring(0, 13); // Limit to the +998 XXX XX XX format
+        digits = digits.substring(0, 13);
       }
 
-      // Format the number
+      // Formatlash
       String formatted = digits;
 
       if (digits.length > 4) {
@@ -186,7 +186,6 @@ class _DisplayProfilePageState extends State<DisplayProfilePage> {
         formatted += ' ${digits.substring(11)}';
       }
 
-      // Ensure the selection index stays after the new text
       return TextEditingValue(
         text: formatted,
         selection: TextSelection.collapsed(offset: formatted.length),
@@ -203,7 +202,7 @@ class _DisplayProfilePageState extends State<DisplayProfilePage> {
               signOut();
             },
             icon: const Icon(Icons.exit_to_app)),
-        title: const Text('Профиль'),
+        title: const Text('Profil'),
         centerTitle: true,
         actions: [
           if (!isEditing)
@@ -233,18 +232,18 @@ class _DisplayProfilePageState extends State<DisplayProfilePage> {
                         children: [
                           const SizedBox(height: 20),
                           const Text(
-                            'Заполните профиль',
+                            'Profilingizni to\'ldiring',
                             style: TextStyle(
                                 fontSize: 22, fontWeight: FontWeight.bold),
                           ),
                           const SizedBox(height: 20),
-                          _buildTextField(_firstNameController, 'Имя', false),
+                          _buildTextField(_firstNameController, 'Ism', false),
                           _buildTextField(
-                              _lastNameController, 'Фамилия', false),
+                              _lastNameController, 'Familiya', false),
                           _buildDatePickerField(
-                              _birthDateController, 'Дата рождения', context),
+                              _birthDateController, 'Tug\'ilgan kun', context),
                           _buildDropdownButton(
-                            'Пол',
+                            'Jins',
                             _selectedGender,
                             _genders,
                             (newValue) {
@@ -254,7 +253,7 @@ class _DisplayProfilePageState extends State<DisplayProfilePage> {
                             },
                           ),
                           _buildDropdownButton(
-                            'Область',
+                            'Hudud',
                             region,
                             _regions,
                             (newValue) {
@@ -263,9 +262,9 @@ class _DisplayProfilePageState extends State<DisplayProfilePage> {
                               });
                             },
                           ),
-                          _buildTextField(_phoneController, 'Телефон', true),
+                          _buildTextField(_phoneController, 'Telefon', true),
                           _buildDropdownButton(
-                            'Цель общения',
+                            'Muloqot maqsadi',
                             _selectedCommunicationGoal,
                             _communicationGoals,
                             (newValue) {
@@ -277,7 +276,7 @@ class _DisplayProfilePageState extends State<DisplayProfilePage> {
                           const SizedBox(height: 20),
                           ElevatedButton(
                             onPressed: _saveUserProfile,
-                            child: const Text('Сохранить профиль'),
+                            child: const Text('Profilni saqlash'),
                           ),
                         ],
                       ),
@@ -299,16 +298,17 @@ class _DisplayProfilePageState extends State<DisplayProfilePage> {
                           ),
                         ),
                         const SizedBox(height: 20),
-                        _buildProfileField('Имя', firstName ?? 'Не указано'),
-                        _buildProfileField('Фамилия', lastName ?? 'Не указано'),
+                        _buildProfileField('Ism', firstName ?? 'Kiritilmagan'),
                         _buildProfileField(
-                            'Дата рождения', birthDate ?? 'Не указано'),
+                            'Familiya', lastName ?? 'Kiritilmagan'),
                         _buildProfileField(
-                            'Пол', _selectedGender ?? 'Не указано'),
-                        _buildProfileField('Область', region ?? 'Не указано'),
-                        _buildProfileField('Телефон', phone ?? 'Не указано'),
-                        _buildProfileField('Цель общения',
-                            _selectedCommunicationGoal ?? 'Не указано'),
+                            'Tug\'ilgan kun', birthDate ?? 'Kiritilmagan'),
+                        _buildProfileField(
+                            'Jins', _selectedGender ?? 'Kiritilmagan'),
+                        _buildProfileField('Hudud', region ?? 'Kiritilmagan'),
+                        _buildProfileField('Telefon', phone ?? 'Kiritilmagan'),
+                        _buildProfileField('Muloqot maqsadi',
+                            _selectedCommunicationGoal ?? 'Kiritilmagan'),
                       ],
                     ),
                   ),
@@ -339,7 +339,7 @@ class _DisplayProfilePageState extends State<DisplayProfilePage> {
               borderRadius: BorderRadius.circular(10),
             ),
             child: Text(
-              value.isEmpty ? 'Не указано' : value,
+              value.isEmpty ? 'Kiritilmagan' : value,
               style: const TextStyle(fontSize: 16, color: Colors.black),
             ),
           ),
@@ -358,11 +358,11 @@ class _DisplayProfilePageState extends State<DisplayProfilePage> {
         inputFormatters: isPhoneNumber ? [_phoneNumberFormatter] : [],
         validator: (value) {
           if (value == null || value.isEmpty) {
-            return 'Пожалуйста, заполните поле';
+            return 'Iltimos, maydonni to\'ldiring';
           }
           if (isPhoneNumber &&
               !RegExp(r'^\+998 \(\d{2}\) \d{3} \d{2} \d{2}$').hasMatch(value)) {
-            return 'Неверный формат номера телефона';
+            return 'Telefon raqam formati noto\'g\'ri';
           }
           return null;
         },
@@ -387,7 +387,7 @@ class _DisplayProfilePageState extends State<DisplayProfilePage> {
             controller: controller,
             validator: (value) {
               if (value == null || value.isEmpty) {
-                return 'Пожалуйста, выберите дату';
+                return 'Iltimos, sanani tanlang';
               }
               return null;
             },
@@ -411,7 +411,7 @@ class _DisplayProfilePageState extends State<DisplayProfilePage> {
         value: selectedValue,
         validator: (value) {
           if (value == null || value.isEmpty) {
-            return 'Пожалуйста, выберите значение';
+            return 'Iltimos, qiymatni tanlang';
           }
           return null;
         },

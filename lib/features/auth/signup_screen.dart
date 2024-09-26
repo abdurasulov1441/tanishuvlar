@@ -45,7 +45,7 @@ class _SignUpScreen extends State<SignUpScreen> {
         passwordTextRepeatInputController.text) {
       SnackBarService.showSnackBar(
         context,
-        'Пароли должны совпадать',
+        'Parollar bir xil bo\'lishi kerak',
         true,
       );
       return;
@@ -57,19 +57,17 @@ class _SignUpScreen extends State<SignUpScreen> {
         password: passwordTextInputController.text.trim(),
       );
     } on FirebaseAuthException catch (e) {
-      print(e.code);
-
       if (e.code == 'email-already-in-use') {
         SnackBarService.showSnackBar(
           context,
-          'Такой Email уже используется, повторите попытку с использованием другого Email',
+          'Bu Email allaqachon foydalanilgan, boshqa Email bilan urunib ko\'ring',
           true,
         );
         return;
       } else {
         SnackBarService.showSnackBar(
           context,
-          'Неизвестная ошибка! Попробуйте еще раз или обратитесь в поддержку.',
+          'Noma\'lum xato! Qayta urunib ko\'ring yoki yordamga murojaat qiling.',
           true,
         );
       }
@@ -81,137 +79,153 @@ class _SignUpScreen extends State<SignUpScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.textColor,
-      resizeToAvoidBottomInset: false,
+      backgroundColor: const Color(0xFF1F1F1F),
       appBar: AppBar(
-        backgroundColor: AppColors.textColor,
+        backgroundColor: const Color(0xFF1F1F1F),
+        elevation: 0,
         leading: IconButton(
-            onPressed: () {
-              Navigator.pop(context);
-            },
-            icon: const Icon(
-              Icons.arrow_back,
-              color: AppColors.headerColor,
-            )),
+          onPressed: () => Navigator.pop(context),
+          icon: const Icon(Icons.arrow_back, color: Colors.white),
+        ),
       ),
-      body: Padding(
-        padding: const EdgeInsets.all(30.0),
-        child: Form(
-          key: formKey,
-          child: Column(
-            children: [
-              Text(
-                'Create a new account',
-                style: AppStyle.fontStyle.copyWith(
-                    fontSize: 25,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.white),
-              ),
-              const SizedBox(
-                height: 10,
-              ),
-              ClipRRect(
-                borderRadius: const BorderRadius.all(Radius.circular(10)),
-                child: Image.asset(
-                  'assets/images/logo.jpg',
-                  width: 100,
-                  height: 100,
+      body: SingleChildScrollView(
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 30.0, vertical: 20),
+          child: Form(
+            key: formKey,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Yangi akkaunt yarating',
+                  style: AppStyle.fontStyle.copyWith(
+                      fontSize: 28,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white),
                 ),
-              ),
-              const SizedBox(
-                height: 20,
-              ),
-              Text(
-                'Free Movies'.toUpperCase(),
-                style: AppStyle.fontStyle.copyWith(
-                    fontSize: 25,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.white),
-              ),
-              const SizedBox(
-                height: 20,
-              ),
-              TextFormField(
-                style: const TextStyle(color: Colors.white),
-                keyboardType: TextInputType.emailAddress,
-                autocorrect: false,
-                controller: emailTextInputController,
-                validator: (email) =>
-                    email != null && !EmailValidator.validate(email)
-                        ? 'Enter corectly email'
-                        : null,
-                decoration: InputDecoration(
-                  border: const OutlineInputBorder(),
-                  hintText: 'Enter your email',
-                  hintStyle: AppStyle.fontStyle.copyWith(color: Colors.white),
-                ),
-              ),
-              const SizedBox(height: 30),
-              TextFormField(
-                style: const TextStyle(color: AppColors.textColor),
-                autocorrect: false,
-                controller: passwordTextInputController,
-                obscureText: isHiddenPassword,
-                autovalidateMode: AutovalidateMode.onUserInteraction,
-                validator: (value) =>
-                    value != null && value.length < 6 ? 'min 6 symbols' : null,
-                decoration: InputDecoration(
-                  border: const OutlineInputBorder(),
-                  hintText: 'Enter passowrd',
-                  hintStyle: AppStyle.fontStyle.copyWith(color: Colors.white),
-                  suffix: InkWell(
-                    onTap: togglePasswordView,
-                    child: Icon(
-                      isHiddenPassword
-                          ? Icons.visibility_off
-                          : Icons.visibility,
-                      color: AppColors.textColor,
+                const SizedBox(height: 10),
+                Center(
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(50),
+                    child: Image.asset(
+                      'assets/images/logo.png',
+                      width: 100,
+                      height: 100,
                     ),
                   ),
                 ),
-              ),
-              const SizedBox(height: 30),
-              TextFormField(
-                style: const TextStyle(color: Colors.white),
-                autocorrect: false,
-                controller: passwordTextRepeatInputController,
-                obscureText: isHiddenPassword,
-                autovalidateMode: AutovalidateMode.onUserInteraction,
-                validator: (value) =>
-                    value != null && value.length < 6 ? 'min 6 symbols' : null,
-                decoration: InputDecoration(
-                  border: const OutlineInputBorder(),
-                  hintText: 'Enter new passowrd again',
-                  hintStyle: AppStyle.fontStyle.copyWith(color: Colors.white),
-                  suffix: InkWell(
-                    onTap: togglePasswordView,
-                    child: Icon(
+                const SizedBox(height: 20),
+                Text(
+                  ''.toUpperCase(),
+                  style: AppStyle.fontStyle.copyWith(
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white),
+                ),
+                const SizedBox(height: 30),
+                TextFormField(
+                  style: const TextStyle(color: Colors.white),
+                  controller: emailTextInputController,
+                  decoration: InputDecoration(
+                    filled: true,
+                    fillColor: Colors.grey[800],
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(15),
+                      borderSide: BorderSide.none,
+                    ),
+                    hintText: 'Email kiriting',
+                    hintStyle: TextStyle(color: Colors.grey[400]),
+                  ),
+                  validator: (email) =>
+                      email != null && !EmailValidator.validate(email)
+                          ? 'To\'g\'ri email kiriting'
+                          : null,
+                ),
+                const SizedBox(height: 20),
+                TextFormField(
+                  style: const TextStyle(color: Colors.white),
+                  controller: passwordTextInputController,
+                  obscureText: isHiddenPassword,
+                  decoration: InputDecoration(
+                    filled: true,
+                    fillColor: Colors.grey[800],
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(15),
+                      borderSide: BorderSide.none,
+                    ),
+                    hintText: 'Parol kiriting',
+                    hintStyle: TextStyle(color: Colors.grey[400]),
+                    suffixIcon: IconButton(
+                      icon: Icon(
                         isHiddenPassword
                             ? Icons.visibility_off
                             : Icons.visibility,
-                        color: AppColors.textColor),
+                        color: Colors.white,
+                      ),
+                      onPressed: togglePasswordView,
+                    ),
+                  ),
+                  validator: (value) => value != null && value.length < 6
+                      ? 'Parol kamida 6 ta belgi bo\'lishi kerak'
+                      : null,
+                ),
+                const SizedBox(height: 20),
+                TextFormField(
+                  style: const TextStyle(color: Colors.white),
+                  controller: passwordTextRepeatInputController,
+                  obscureText: isHiddenPassword,
+                  decoration: InputDecoration(
+                    filled: true,
+                    fillColor: Colors.grey[800],
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(15),
+                      borderSide: BorderSide.none,
+                    ),
+                    hintText: 'Parolni takror kiriting',
+                    hintStyle: TextStyle(color: Colors.grey[400]),
+                    suffixIcon: IconButton(
+                      icon: Icon(
+                        isHiddenPassword
+                            ? Icons.visibility_off
+                            : Icons.visibility,
+                        color: Colors.white,
+                      ),
+                      onPressed: togglePasswordView,
+                    ),
+                  ),
+                  validator: (value) => value != null && value.length < 6
+                      ? 'Parol kamida 6 ta belgi bo\'lishi kerak'
+                      : null,
+                ),
+                const SizedBox(height: 30),
+                Center(
+                  child: ElevatedButton(
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFF4CAF50),
+                      minimumSize: const Size(double.infinity, 50),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(15),
+                      ),
+                    ),
+                    onPressed: signUp,
+                    child: Text(
+                      'Ro\'yxatdan o\'tish',
+                      style: AppStyle.fontStyle.copyWith(color: Colors.white),
+                    ),
                   ),
                 ),
-              ),
-              const SizedBox(height: 30),
-              ElevatedButton(
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color.fromARGB(255, 46, 46, 46),
-                ),
-                onPressed: signUp,
-                child: Center(
+                const SizedBox(height: 20),
+                Center(
+                  child: TextButton(
+                    onPressed: () => Navigator.of(context).pop(),
                     child: Text(
-                  'Sing up',
-                  style: AppStyle.fontStyle.copyWith(color: Colors.white),
-                )),
-              ),
-              const SizedBox(height: 30),
-              TextButton(
-                onPressed: () => Navigator.of(context).pop(),
-                child: Text('Sign in',
-                    style: AppStyle.fontStyle.copyWith(color: Colors.white)),
-              ),
-            ],
+                      'Akkauntingiz bormi? Kirish',
+                      style: AppStyle.fontStyle.copyWith(color: Colors.white),
+                    ),
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
       ),
