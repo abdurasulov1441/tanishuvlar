@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:intl/intl.dart'; // Sanalarni formatlash va parslash uchun
+import 'package:intl/intl.dart';
 import 'package:tanishuvlar/features/chat_page/chat_detail_page.dart';
 import 'package:tanishuvlar/style/app_style.dart';
 
@@ -98,7 +98,6 @@ class _SearchPageState extends State<SearchPage> {
     });
   }
 
-  // Tug'ilgan sanadan yoshni hisoblash
   int? _calculateAgeFromBirthDate(String birthDateStr) {
     if (birthDateStr.isEmpty) return null;
 
@@ -133,10 +132,8 @@ class _SearchPageState extends State<SearchPage> {
         final gender = userData['gender'] ?? 'Kiritilmagan';
         final region = userData['region'] ?? 'Kiritilmagan';
         final birthDate = userData['birthDate'] ?? 'Kiritilmagan';
-        final userEmail =
-            _filteredUsers[index].id; // Email hujjat IDsi sifatida
+        final userEmail = _filteredUsers[index].id;
 
-        // Yoshni hisoblash
         int? age = _calculateAgeFromBirthDate(birthDate);
 
         return Card(
@@ -235,10 +232,15 @@ class _SearchPageState extends State<SearchPage> {
     return Scaffold(
       backgroundColor: const Color(0xFF1F1F1F),
       appBar: AppBar(
+        centerTitle: true,
         backgroundColor: Colors.grey[800],
         title: Text(
           'Foydalanuvchilarni qidirish',
-          style: AppStyle.fontStyle.copyWith(color: Colors.white, fontSize: 20),
+          style: AppStyle.fontStyle.copyWith(
+            color: Colors.white,
+            fontSize: 20,
+            fontWeight: FontWeight.bold,
+          ),
         ),
         actions: [
           IconButton(
@@ -254,6 +256,7 @@ class _SearchPageState extends State<SearchPage> {
           children: [
             TextField(
               controller: _searchController,
+              style: const TextStyle(color: Colors.white),
               decoration: InputDecoration(
                 labelText: 'Ism/Familiya bo\'yicha qidirish',
                 border: OutlineInputBorder(
@@ -262,10 +265,12 @@ class _SearchPageState extends State<SearchPage> {
                 ),
                 filled: true,
                 fillColor: Colors.grey[850],
+                hintStyle: const TextStyle(color: Colors.white70),
               ),
             ),
             const SizedBox(height: 16),
             DropdownButtonFormField<String>(
+              dropdownColor: Colors.grey[900],
               decoration: InputDecoration(
                 labelText: 'Jins',
                 border: OutlineInputBorder(
@@ -279,8 +284,10 @@ class _SearchPageState extends State<SearchPage> {
               items: _genders.map((String value) {
                 return DropdownMenuItem<String>(
                   value: value,
-                  child:
-                      Text(value, style: const TextStyle(color: Colors.white)),
+                  child: Text(
+                    value,
+                    style: const TextStyle(color: Colors.white),
+                  ),
                 );
               }).toList(),
               onChanged: (newValue) {
@@ -292,6 +299,7 @@ class _SearchPageState extends State<SearchPage> {
             ),
             const SizedBox(height: 16),
             DropdownButtonFormField<String>(
+              dropdownColor: Colors.grey[900],
               decoration: InputDecoration(
                 labelText: 'Muloqot maqsadi',
                 border: OutlineInputBorder(
@@ -305,8 +313,10 @@ class _SearchPageState extends State<SearchPage> {
               items: _communicationGoals.map((String value) {
                 return DropdownMenuItem<String>(
                   value: value,
-                  child:
-                      Text(value, style: const TextStyle(color: Colors.white)),
+                  child: Text(
+                    value,
+                    style: const TextStyle(color: Colors.white),
+                  ),
                 );
               }).toList(),
               onChanged: (newValue) {
@@ -318,6 +328,7 @@ class _SearchPageState extends State<SearchPage> {
             ),
             const SizedBox(height: 16),
             DropdownButtonFormField<String>(
+              dropdownColor: Colors.grey[900],
               decoration: InputDecoration(
                 labelText: 'Hudud',
                 border: OutlineInputBorder(
@@ -331,8 +342,10 @@ class _SearchPageState extends State<SearchPage> {
               items: _regions.map((String value) {
                 return DropdownMenuItem<String>(
                   value: value,
-                  child:
-                      Text(value, style: const TextStyle(color: Colors.white)),
+                  child: Text(
+                    value,
+                    style: const TextStyle(color: Colors.white),
+                  ),
                 );
               }).toList(),
               onChanged: (newValue) {

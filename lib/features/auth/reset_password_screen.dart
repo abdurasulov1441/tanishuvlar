@@ -24,7 +24,7 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
 
   Future<void> resetPassword() async {
     final navigator = Navigator.of(context);
-    final scaffoldMassager = ScaffoldMessenger.of(context);
+    final scaffoldMessenger = ScaffoldMessenger.of(context);
 
     final isValid = formKey.currentState!.validate();
     if (!isValid) return;
@@ -56,21 +56,28 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
       backgroundColor: Colors.green,
     );
 
-    scaffoldMassager.showSnackBar(snackBar);
-
+    scaffoldMessenger.showSnackBar(snackBar);
     navigator.pushNamedAndRemoveUntil('/home', (Route<dynamic> route) => false);
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.backgroundColor,
+      backgroundColor: const Color(0xFF1F1F1F),
       resizeToAvoidBottomInset: false,
       appBar: AppBar(
-        backgroundColor: AppColors.headerColor,
-        title: const Text(
+        leading: IconButton(
+            onPressed: () {
+              Navigator.pop(context);
+            },
+            icon: Icon(
+              Icons.arrow_back,
+              color: Colors.white,
+            )),
+        backgroundColor: Colors.grey[800],
+        title: Text(
           'Parolni tiklash',
-          style: AppStyle.fontStyle,
+          style: AppStyle.fontStyle.copyWith(color: Colors.white),
         ),
       ),
       body: Padding(
@@ -88,22 +95,36 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
                     email != null && !EmailValidator.validate(email)
                         ? 'To\'g\'ri email kiriting'
                         : null,
-                decoration: const InputDecoration(
-                  border: OutlineInputBorder(),
+                decoration: InputDecoration(
+                  border: OutlineInputBorder(
+                    borderRadius:
+                        BorderRadius.circular(20.0), // Rounded corners
+                    borderSide: BorderSide(color: AppColors.textColor),
+                  ),
                   hintText: 'Emailingizni kiriting',
-                  hintStyle: AppStyle.fontStyle,
+                  hintStyle: AppStyle.fontStyle.copyWith(color: Colors.grey),
+                  filled: true,
+                  fillColor: Colors.grey[850], // Darker background for input
                 ),
               ),
               const SizedBox(height: 30),
               ElevatedButton(
                 style: ElevatedButton.styleFrom(
-                    backgroundColor: AppColors.headerColor),
+                  backgroundColor: const Color(0xFF4CAF50),
+                  padding: const EdgeInsets.symmetric(
+                      vertical: 15), // Increased padding
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(20.0), // Rounded button
+                  ),
+                ),
                 onPressed: resetPassword,
-                child: const Center(
-                    child: Text(
-                  'Parolni tiklash',
-                  style: AppStyle.fontStyle,
-                )),
+                child: Center(
+                  child: Text(
+                    'Parolni tiklash',
+                    style: AppStyle.fontStyle
+                        .copyWith(color: Colors.white, fontSize: 15),
+                  ),
+                ),
               ),
             ],
           ),

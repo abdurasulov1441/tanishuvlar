@@ -96,7 +96,7 @@ class _LoginScreenState extends State<LoginScreen> {
                 const SizedBox(height: 10),
                 Center(
                   child: Text(
-                    'Sevgingizni topish uchun kiring',
+                    'Tizimga kirishingiz mumkin',
                     style: AppStyle.fontStyle
                         .copyWith(color: Colors.grey[500], fontSize: 16),
                   ),
@@ -166,6 +166,20 @@ class _LoginScreenState extends State<LoginScreen> {
                   ),
                 ),
                 const SizedBox(height: 20),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.end,
+                  children: [
+                    TextButton(
+                        onPressed: () {
+                          Navigator.of(context).pushNamed('/reset_password');
+                        },
+                        child: Text(
+                          'Parolni unutdingizmi?',
+                          style:
+                              AppStyle.fontStyle.copyWith(color: Colors.white),
+                        )),
+                  ],
+                ),
                 Center(
                   child: TextButton(
                     onPressed: () => Navigator.of(context).pushNamed('/signup'),

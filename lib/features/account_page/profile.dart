@@ -198,7 +198,11 @@ class _DisplayProfilePageState extends State<DisplayProfilePage> {
             )),
         title: Text(
           'Profil',
-          style: AppStyle.fontStyle.copyWith(color: Colors.white, fontSize: 20),
+          style: AppStyle.fontStyle.copyWith(
+            color: Colors.white,
+            fontSize: 20,
+            fontWeight: FontWeight.bold,
+          ),
         ),
         centerTitle: true,
         actions: [
@@ -277,15 +281,23 @@ class _DisplayProfilePageState extends State<DisplayProfilePage> {
                             },
                           ),
                           const SizedBox(height: 20),
-                          ElevatedButton(
-                            onPressed: _saveUserProfile,
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: Colors.green, // Button color
-                              padding: const EdgeInsets.symmetric(vertical: 12),
-                              textStyle: const TextStyle(
-                                  fontSize: 16, fontWeight: FontWeight.bold),
+                          Center(
+                            child: ElevatedButton(
+                              onPressed: _saveUserProfile,
+                              style: ElevatedButton.styleFrom(
+                                minimumSize: const Size(double.infinity, 50),
+                                backgroundColor: Colors.green, // Button color
+                                padding:
+                                    const EdgeInsets.symmetric(vertical: 12),
+                                textStyle: const TextStyle(
+                                    fontSize: 16, fontWeight: FontWeight.bold),
+                              ),
+                              child: Text(
+                                'Profilni saqlash',
+                                style: AppStyle.fontStyle
+                                    .copyWith(color: Colors.white),
+                              ),
                             ),
-                            child: const Text('Profilni saqlash'),
                           ),
                         ],
                       ),
@@ -318,6 +330,9 @@ class _DisplayProfilePageState extends State<DisplayProfilePage> {
                         _buildProfileField('Telefon', phone ?? 'Kiritilmagan'),
                         _buildProfileField('Muloqot maqsadi',
                             _selectedCommunicationGoal ?? 'Kiritilmagan'),
+                        SizedBox(
+                          height: 30,
+                        )
                       ],
                     ),
                   ),
@@ -365,6 +380,8 @@ class _DisplayProfilePageState extends State<DisplayProfilePage> {
         controller: controller,
         keyboardType: isPhoneNumber ? TextInputType.phone : TextInputType.text,
         inputFormatters: isPhoneNumber ? [_phoneNumberFormatter] : [],
+        style: const TextStyle(
+            color: Colors.white), // Set input text color to white
         validator: (value) {
           if (value == null || value.isEmpty) {
             return 'Iltimos, maydonni to\'ldiring';
@@ -398,6 +415,8 @@ class _DisplayProfilePageState extends State<DisplayProfilePage> {
         child: AbsorbPointer(
           child: TextFormField(
             controller: controller,
+            style: const TextStyle(
+                color: Colors.white), // Set date text color to white
             validator: (value) {
               if (value == null || value.isEmpty) {
                 return 'Iltimos, sanani tanlang';
@@ -425,6 +444,8 @@ class _DisplayProfilePageState extends State<DisplayProfilePage> {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 10.0),
       child: DropdownButtonFormField<String>(
+        dropdownColor:
+            Colors.grey[900], // Set dropdown background color to grey[900]
         value: selectedValue,
         validator: (value) {
           if (value == null || value.isEmpty) {
@@ -447,7 +468,7 @@ class _DisplayProfilePageState extends State<DisplayProfilePage> {
             value: value,
             child: Text(value,
                 style: const TextStyle(
-                    color: Colors.white)), // Dropdown item color
+                    color: Colors.white)), // Dropdown item text color to white
           );
         }).toList(),
         onChanged: onChanged,

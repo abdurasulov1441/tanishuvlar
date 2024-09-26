@@ -11,23 +11,24 @@ class HomePage extends StatelessWidget {
     final currentUserEmail = FirebaseAuth.instance.currentUser!.email;
 
     return Scaffold(
-      backgroundColor:
-          const Color(0xFF1F1F1F), // Тёмный фон как на странице логина
+      backgroundColor: const Color(0xFF1F1F1F),
       appBar: AppBar(
-        backgroundColor: const Color(0xFF1F1F1F), // Тёмный AppBar
-        title: const Text('Yangi foydalanuvchilar',
-            style: TextStyle(
-              color: Colors.white,
-              fontSize: 22,
-              fontWeight: FontWeight.bold,
-            )),
+        backgroundColor: const Color(0xFF1F1F1F),
+        title: const Text(
+          'Yangi foydalanuvchilar',
+          style: TextStyle(
+            color: Colors.white,
+            fontSize: 20,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
         centerTitle: true,
-        elevation: 0, // Убираем тень AppBar
+        elevation: 0,
         actions: [
           IconButton(
             icon: const Icon(Icons.refresh, color: Colors.white),
             onPressed: () {
-              // Логика обновления
+              // Refresh logic
             },
           ),
         ],
@@ -62,36 +63,46 @@ class HomePage extends StatelessWidget {
               final gender = userData['gender'] ?? 'Kiritilmagan';
 
               if (userEmail == currentUserEmail) {
-                return const SizedBox(); // Пропускаем текущего пользователя
+                return const SizedBox(); // Skip current user
               }
 
-              return ListTile(
-                leading: CircleAvatar(
-                  backgroundColor:
-                      gender == 'Ayol' ? Colors.pinkAccent : Colors.blueAccent,
-                  child: Text(
-                    firstName[0].toUpperCase(),
-                    style: const TextStyle(color: Colors.white),
-                  ),
+              return Card(
+                color: Colors.grey[800],
+                margin:
+                    const EdgeInsets.symmetric(vertical: 8.0, horizontal: 16.0),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(16.0),
+                  side: const BorderSide(color: Colors.grey, width: 0.5),
                 ),
-                title: Text(
-                  '$firstName $lastName',
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontSize: 18,
-                    fontWeight: FontWeight.w600,
+                child: ListTile(
+                  leading: CircleAvatar(
+                    backgroundColor: gender == 'Ayol'
+                        ? Colors.pinkAccent
+                        : Colors.blueAccent,
+                    child: Text(
+                      firstName[0].toUpperCase(),
+                      style: const TextStyle(color: Colors.white),
+                    ),
                   ),
-                ),
-                subtitle: Text(
-                  'Tug\'ilgan sana: $birthDate\nJinsi: $gender',
-                  style: const TextStyle(
-                    color: Colors.grey,
-                    fontSize: 14,
+                  title: Text(
+                    '$firstName $lastName',
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 18,
+                      fontWeight: FontWeight.w600,
+                    ),
                   ),
+                  subtitle: Text(
+                    'Tug\'ilgan sana: $birthDate\nJinsi: $gender',
+                    style: const TextStyle(
+                      color: Colors.grey,
+                      fontSize: 14,
+                    ),
+                  ),
+                  onTap: () {
+                    _handleUserTap(context, currentUserEmail!, userEmail);
+                  },
                 ),
-                onTap: () {
-                  _handleUserTap(context, currentUserEmail!, userEmail);
-                },
               );
             },
           );
@@ -100,7 +111,6 @@ class HomePage extends StatelessWidget {
     );
   }
 
-  // Проверка на наличие чата и создание нового при необходимости
   Future<void> _handleUserTap(
       BuildContext context, String currentUserEmail, String userEmail) async {
     QuerySnapshot chatSnapshot = await FirebaseFirestore.instance

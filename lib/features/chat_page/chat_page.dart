@@ -19,7 +19,11 @@ class ChatPage extends StatelessWidget {
         backgroundColor: Colors.grey[800],
         title: Text(
           'Chatlar',
-          style: AppStyle.fontStyle.copyWith(color: Colors.white, fontSize: 20),
+          style: AppStyle.fontStyle.copyWith(
+            color: Colors.white,
+            fontSize: 20,
+            fontWeight: FontWeight.bold,
+          ),
         ),
       ),
       body: StreamBuilder<QuerySnapshot>(
