@@ -2,7 +2,6 @@ import 'package:email_validator/email_validator.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:tanishuvlar/services/snack_bar.dart';
-import 'package:tanishuvlar/style/app_colors.dart';
 import 'package:tanishuvlar/style/app_style.dart';
 
 class LoginScreen extends StatefulWidget {
@@ -85,18 +84,22 @@ class _LoginScreenState extends State<LoginScreen> {
                   ),
                 ),
                 const SizedBox(height: 20),
-                Text(
-                  'Xush kelibsiz!',
-                  style: AppStyle.fontStyle.copyWith(
-                      color: Colors.white,
-                      fontSize: 28,
-                      fontWeight: FontWeight.bold),
+                Center(
+                  child: Text(
+                    'Xush kelibsiz!',
+                    style: AppStyle.fontStyle.copyWith(
+                        color: Colors.white,
+                        fontSize: 28,
+                        fontWeight: FontWeight.bold),
+                  ),
                 ),
                 const SizedBox(height: 10),
-                Text(
-                  'Hisobingizga kiring',
-                  style: AppStyle.fontStyle
-                      .copyWith(color: Colors.grey[500], fontSize: 16),
+                Center(
+                  child: Text(
+                    'Sevgingizni topish uchun kiring',
+                    style: AppStyle.fontStyle
+                        .copyWith(color: Colors.grey[500], fontSize: 16),
+                  ),
                 ),
                 const SizedBox(height: 30),
                 TextFormField(

@@ -4,6 +4,7 @@ import 'package:tanishuvlar/features/chat_page/chat_detail_page.dart';
 import 'package:tanishuvlar/features/chat_page/chat_page.dart';
 import 'package:tanishuvlar/features/home_page/home_page.dart';
 import 'package:tanishuvlar/features/search_page/search_page.dart';
+import 'package:tanishuvlar/style/app_style.dart'; // Подключаем стиль
 
 class MainPage extends StatefulWidget {
   const MainPage({super.key});
@@ -55,21 +56,33 @@ class _MainPageState extends State<MainPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: const Color(0xFF1F1F1F), // Asosiy fon
       body: IndexedStack(
         index: _selectedIndex,
         children: _pages,
       ),
       bottomNavigationBar: BottomNavigationBar(
+        backgroundColor: Colors.black, // Qora fon qo'yamiz
+        type: BottomNavigationBarType.fixed, // Barni to'g'ri ishlash uchun
         items: const <BottomNavigationBarItem>[
-          BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Asosiy'),
-          BottomNavigationBarItem(icon: Icon(Icons.search), label: 'Qidiruv'),
-          BottomNavigationBarItem(icon: Icon(Icons.chat), label: 'Chat'),
           BottomNavigationBarItem(
-              icon: Icon(Icons.account_circle), label: 'Profil'),
+              icon: Icon(Icons.home, color: Colors.white), label: 'Asosiy'),
+          BottomNavigationBarItem(
+              icon: Icon(Icons.search, color: Colors.white), label: 'Qidiruv'),
+          BottomNavigationBarItem(
+              icon: Icon(Icons.chat, color: Colors.white), label: 'Chat'),
+          BottomNavigationBarItem(
+              icon: Icon(Icons.account_circle, color: Colors.white),
+              label: 'Profil'),
         ],
         currentIndex: _selectedIndex,
-        selectedItemColor: Colors.blue,
+        selectedItemColor: const Color(0xFF4CAF50), // Tanlangan element rangi
+        unselectedItemColor: Colors.grey[600], // Tanlanmagan elementlar rangi
         onTap: _onItemTapped,
+        selectedLabelStyle:
+            AppStyle.fontStyle.copyWith(color: const Color(0xFF4CAF50)),
+        unselectedLabelStyle:
+            AppStyle.fontStyle.copyWith(color: Colors.grey[600]),
       ),
     );
   }

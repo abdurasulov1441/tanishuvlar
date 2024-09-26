@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:intl/intl.dart'; // To format and parse dates
+import 'package:intl/intl.dart'; // Sanalarni formatlash va parslash uchun
 import 'package:tanishuvlar/features/chat_page/chat_detail_page.dart';
+import 'package:tanishuvlar/style/app_style.dart';
 
 class SearchPage extends StatefulWidget {
   const SearchPage({super.key});
@@ -21,28 +22,28 @@ class _SearchPageState extends State<SearchPage> {
   List<DocumentSnapshot> _allUsers = [];
   List<DocumentSnapshot> _filteredUsers = [];
 
-  final List<String> _genders = ['Мужчина', 'Женщина', 'Другой'];
+  final List<String> _genders = ['Erkak', 'Ayol', 'Boshqa'];
   final List<String> _communicationGoals = [
-    'Просто так',
-    'Дружба',
-    'Поиск любви',
-    'Завести семью'
+    'Oddiy suhbat',
+    'Do\'stlik',
+    'Sevgi izlash',
+    'Oila qurish'
   ];
   final List<String> _regions = [
-    'Каракалпакстан Р',
-    'Андижан',
-    'Бухара',
-    'Джизах',
-    'Кашкадарья',
-    'Наманган',
-    'Наваи',
-    'Самарканд',
-    'Сурхандарья',
-    'Сирдарья',
-    'город Ташкент',
-    'Ташкент обл',
-    'Фергана',
-    'Хорезм'
+    'Qoraqalpog\'iston R.',
+    'Andijon',
+    'Buxoro',
+    'Jizzax',
+    'Qashqadaryo',
+    'Namangan',
+    'Navoiy',
+    'Samarqand',
+    'Surxondaryo',
+    'Sirdaryo',
+    'Toshkent sh.',
+    'Toshkent vil.',
+    'Farg\'ona',
+    'Xorazm'
   ];
 
   final User? currentUser = FirebaseAuth.instance.currentUser;
@@ -77,10 +78,6 @@ class _SearchPageState extends State<SearchPage> {
         final communicationGoal = data['communicationGoal'] ?? '';
         final region = data['region'] ?? '';
 
-        // Fetching birthDate
-        final birthDateStr = data['birthDate'] ?? '';
-        _calculateAgeFromBirthDate(birthDateStr);
-
         bool matchesName =
             firstName.contains(searchText) || lastName.contains(searchText);
 
@@ -101,7 +98,7 @@ class _SearchPageState extends State<SearchPage> {
     });
   }
 
-  // Method to calculate age from birthDate
+  // Tug'ilgan sanadan yoshni hisoblash
   int? _calculateAgeFromBirthDate(String birthDateStr) {
     if (birthDateStr.isEmpty) return null;
 
@@ -117,44 +114,58 @@ class _SearchPageState extends State<SearchPage> {
 
       return age;
     } catch (e) {
-      print('Error parsing birth date: $e');
+      print('Tug\'ilgan sanani parslashda xatolik: $e');
       return null;
     }
   }
 
   Widget _buildUserList() {
     if (_filteredUsers.isEmpty) {
-      return const Center(child: Text('Пользователи не найдены.'));
+      return const Center(child: Text('Foydalanuvchilar topilmadi.'));
     }
 
     return ListView.builder(
       itemCount: _filteredUsers.length,
       itemBuilder: (context, index) {
         final userData = _filteredUsers[index].data() as Map<String, dynamic>;
-        final name = userData['firstName'] ?? 'Не указано';
+        final name = userData['firstName'] ?? 'Kiritilmagan';
         final lastName = userData['lastName'] ?? '';
-        final gender = userData['gender'] ?? 'Не указано';
-        final region = userData['region'] ?? 'Не указано';
-        final birthDate = userData['birthDate'] ?? 'Не указано';
-        final userEmail = _filteredUsers[index].id; // Email as document ID
+        final gender = userData['gender'] ?? 'Kiritilmagan';
+        final region = userData['region'] ?? 'Kiritilmagan';
+        final birthDate = userData['birthDate'] ?? 'Kiritilmagan';
+        final userEmail =
+            _filteredUsers[index].id; // Email hujjat IDsi sifatida
 
-        // Calculate age
+        // Yoshni hisoblash
         int? age = _calculateAgeFromBirthDate(birthDate);
 
-        return ListTile(
-          leading: CircleAvatar(
-            backgroundImage: AssetImage(
-              gender == 'Мужчина'
-                  ? 'assets/icons/man.png'
-                  : 'assets/icons/woman.png',
-            ),
+        return Card(
+          color: Colors.grey[800],
+          margin: const EdgeInsets.symmetric(vertical: 8.0),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16.0),
+            side: const BorderSide(color: Colors.grey, width: 0.5),
           ),
-          title: Text('$name $lastName'),
-          subtitle: Text(
-              'Пол: $gender\nВозраст: ${age ?? "Не указано"}\nОбласть: $region'),
-          onTap: () {
-            _handleUserTap(context, currentUser!.email!, userEmail);
-          },
+          child: ListTile(
+            leading: CircleAvatar(
+              backgroundImage: AssetImage(
+                gender == 'Erkak'
+                    ? 'assets/icons/man.png'
+                    : 'assets/icons/woman.png',
+              ),
+            ),
+            title: Text(
+              '$name $lastName',
+              style: AppStyle.fontStyle.copyWith(color: Colors.white),
+            ),
+            subtitle: Text(
+              'Jins: $gender\nYosh: ${age ?? "Kiritilmagan"}\nHudud: $region',
+              style: const TextStyle(color: Colors.grey),
+            ),
+            onTap: () {
+              _handleUserTap(context, currentUser!.email!, userEmail);
+            },
+          ),
         );
       },
     );
@@ -222,8 +233,13 @@ class _SearchPageState extends State<SearchPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: const Color(0xFF1F1F1F),
       appBar: AppBar(
-        title: const Text('Поиск пользователей'),
+        backgroundColor: Colors.grey[800],
+        title: Text(
+          'Foydalanuvchilarni qidirish',
+          style: AppStyle.fontStyle.copyWith(color: Colors.white, fontSize: 20),
+        ),
         actions: [
           IconButton(
             icon: const Icon(Icons.clear),
@@ -238,22 +254,33 @@ class _SearchPageState extends State<SearchPage> {
           children: [
             TextField(
               controller: _searchController,
-              decoration: const InputDecoration(
-                labelText: 'Поиск по имени/фамилии',
-                border: OutlineInputBorder(),
+              decoration: InputDecoration(
+                labelText: 'Ism/Familiya bo\'yicha qidirish',
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(20.0),
+                  borderSide: BorderSide(color: Colors.grey),
+                ),
+                filled: true,
+                fillColor: Colors.grey[850],
               ),
             ),
             const SizedBox(height: 16),
             DropdownButtonFormField<String>(
-              decoration: const InputDecoration(
-                labelText: 'Пол',
-                border: OutlineInputBorder(),
+              decoration: InputDecoration(
+                labelText: 'Jins',
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(20.0),
+                  borderSide: BorderSide(color: Colors.grey),
+                ),
+                filled: true,
+                fillColor: Colors.grey[850],
               ),
               value: _selectedGender,
               items: _genders.map((String value) {
                 return DropdownMenuItem<String>(
                   value: value,
-                  child: Text(value),
+                  child:
+                      Text(value, style: const TextStyle(color: Colors.white)),
                 );
               }).toList(),
               onChanged: (newValue) {
@@ -265,15 +292,21 @@ class _SearchPageState extends State<SearchPage> {
             ),
             const SizedBox(height: 16),
             DropdownButtonFormField<String>(
-              decoration: const InputDecoration(
-                labelText: 'Цель общения',
-                border: OutlineInputBorder(),
+              decoration: InputDecoration(
+                labelText: 'Muloqot maqsadi',
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(20.0),
+                  borderSide: BorderSide(color: Colors.grey),
+                ),
+                filled: true,
+                fillColor: Colors.grey[850],
               ),
               value: _selectedCommunicationGoal,
               items: _communicationGoals.map((String value) {
                 return DropdownMenuItem<String>(
                   value: value,
-                  child: Text(value),
+                  child:
+                      Text(value, style: const TextStyle(color: Colors.white)),
                 );
               }).toList(),
               onChanged: (newValue) {
@@ -285,15 +318,21 @@ class _SearchPageState extends State<SearchPage> {
             ),
             const SizedBox(height: 16),
             DropdownButtonFormField<String>(
-              decoration: const InputDecoration(
-                labelText: 'Область проживания',
-                border: OutlineInputBorder(),
+              decoration: InputDecoration(
+                labelText: 'Hudud',
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(20.0),
+                  borderSide: BorderSide(color: Colors.grey),
+                ),
+                filled: true,
+                fillColor: Colors.grey[850],
               ),
               value: _selectedRegion,
               items: _regions.map((String value) {
                 return DropdownMenuItem<String>(
                   value: value,
-                  child: Text(value),
+                  child:
+                      Text(value, style: const TextStyle(color: Colors.white)),
                 );
               }).toList(),
               onChanged: (newValue) {

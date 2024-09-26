@@ -2,7 +2,6 @@ import 'package:email_validator/email_validator.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:tanishuvlar/services/snack_bar.dart';
-import 'package:tanishuvlar/style/app_colors.dart';
 import 'package:tanishuvlar/style/app_style.dart';
 
 class SignUpScreen extends StatefulWidget {

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:tanishuvlar/style/app_style.dart';
 import 'chat_detail_page.dart';
 import 'package:intl/intl.dart'; // Vaqtni formatlash uchun
 
@@ -12,8 +13,14 @@ class ChatPage extends StatelessWidget {
     final currentUserEmail = FirebaseAuth.instance.currentUser!.email;
 
     return Scaffold(
+      backgroundColor: const Color(0xFF1F1F1F),
       appBar: AppBar(
-        title: const Text('Chatlar'),
+        centerTitle: true,
+        backgroundColor: Colors.grey[800],
+        title: Text(
+          'Chatlar',
+          style: AppStyle.fontStyle.copyWith(color: Colors.white, fontSize: 20),
+        ),
       ),
       body: StreamBuilder<QuerySnapshot>(
         stream: FirebaseFirestore.instance
@@ -27,7 +34,12 @@ class ChatPage extends StatelessWidget {
           }
 
           if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
-            return const Center(child: Text('Faol chatlar yo\'q.'));
+            return const Center(
+              child: Text(
+                'Faol chatlar yo\'q.',
+                style: TextStyle(color: Colors.white, fontSize: 18),
+              ),
+            );
           }
 
           final chatDocs = snapshot.data!.docs;
@@ -69,14 +81,21 @@ class ChatPage extends StatelessWidget {
                   messageStatus == 'read' ? Icons.done_all : Icons.done;
 
               return ListTile(
-                leading: const CircleAvatar(child: Icon(Icons.person)),
+                leading: const CircleAvatar(
+                  child: Icon(Icons.person),
+                  backgroundColor: Colors.grey,
+                ),
                 title: Text(
-                    '$chatPartnerEmail bilan chat'), // Suhbatdoshning emailini ko'rsatish
+                  '$chatPartnerEmail bilan chat', // Suhbatdoshning emailini ko'rsatish
+                  style: const TextStyle(color: Colors.white, fontSize: 16),
+                ),
                 subtitle: Row(
                   children: [
                     Expanded(
                       child: Text(
                         '$lastMessageDisplay\n$formattedTime',
+                        style:
+                            const TextStyle(color: Colors.grey, fontSize: 14),
                       ),
                     ),
                     if (lastSender ==

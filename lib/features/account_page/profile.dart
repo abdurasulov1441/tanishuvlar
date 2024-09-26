@@ -3,6 +3,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:tanishuvlar/style/app_style.dart';
 
 class DisplayProfilePage extends StatefulWidget {
   const DisplayProfilePage({super.key});
@@ -17,7 +18,7 @@ class _DisplayProfilePageState extends State<DisplayProfilePage> {
 
   Future<void> signOut() async {
     final navigator = Navigator.of(context);
-    await FirebaseAuth.instance.signOut();
+    await _auth.signOut();
     navigator.pushNamedAndRemoveUntil('/home', (Route<dynamic> route) => false);
   }
 
@@ -89,10 +90,8 @@ class _DisplayProfilePageState extends State<DisplayProfilePage> {
           lastName = userDoc['lastName'] ?? '';
           birthDate = userDoc['birthDate'] ?? '';
           _selectedGender = userDoc['gender'] ?? '';
-
           region =
               _regions.contains(userDoc['region']) ? userDoc['region'] : null;
-
           phone = userDoc['phone'] ?? '';
           _selectedCommunicationGoal = userDoc['communicationGoal'] ?? '';
           profileExists = true;
@@ -150,29 +149,19 @@ class _DisplayProfilePageState extends State<DisplayProfilePage> {
     }
   }
 
-  // Telefon raqami formatlovi (+998 (XX) XXX XX XX kabi formatlash uchun)
   final _phoneNumberFormatter = TextInputFormatter.withFunction(
     (oldValue, newValue) {
       if (newValue.text.isEmpty) {
         return newValue.copyWith(text: '+998 ');
       }
-
-      // Barcha raqam bo'lmagan belgilarni olib tashlash (faqat '+' qoldiriladi)
       String digits = newValue.text.replaceAll(RegExp(r'[^\d+]'), '');
-
-      // +998 dan boshlanishini ta'minlaymiz
       if (!digits.startsWith('+998')) {
         digits = '+998';
       }
-
-      // Limit to +998 XXX XX XX
       if (digits.length > 13) {
         digits = digits.substring(0, 13);
       }
-
-      // Formatlash
       String formatted = digits;
-
       if (digits.length > 4) {
         formatted = '+998 (${digits.substring(4, min(6, digits.length))}';
       }
@@ -196,18 +185,29 @@ class _DisplayProfilePageState extends State<DisplayProfilePage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: const Color(0xFF1F1F1F),
       appBar: AppBar(
+        backgroundColor: Colors.grey[800],
         leading: IconButton(
             onPressed: () {
               signOut();
             },
-            icon: const Icon(Icons.exit_to_app)),
-        title: const Text('Profil'),
+            icon: const Icon(
+              Icons.exit_to_app,
+              color: Colors.white,
+            )),
+        title: Text(
+          'Profil',
+          style: AppStyle.fontStyle.copyWith(color: Colors.white, fontSize: 20),
+        ),
         centerTitle: true,
         actions: [
           if (!isEditing)
             IconButton(
-              icon: const Icon(Icons.edit),
+              icon: const Icon(
+                Icons.edit,
+                color: Colors.white,
+              ),
               onPressed: () {
                 setState(() {
                   isEditing = true;
@@ -229,12 +229,15 @@ class _DisplayProfilePageState extends State<DisplayProfilePage> {
                     child: Form(
                       key: _formKey,
                       child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           const SizedBox(height: 20),
                           const Text(
                             'Profilingizni to\'ldiring',
                             style: TextStyle(
-                                fontSize: 22, fontWeight: FontWeight.bold),
+                                fontSize: 22,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.white),
                           ),
                           const SizedBox(height: 20),
                           _buildTextField(_firstNameController, 'Ism', false),
@@ -276,6 +279,12 @@ class _DisplayProfilePageState extends State<DisplayProfilePage> {
                           const SizedBox(height: 20),
                           ElevatedButton(
                             onPressed: _saveUserProfile,
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: Colors.green, // Button color
+                              padding: const EdgeInsets.symmetric(vertical: 12),
+                              textStyle: const TextStyle(
+                                  fontSize: 16, fontWeight: FontWeight.bold),
+                            ),
                             child: const Text('Profilni saqlash'),
                           ),
                         ],
@@ -335,12 +344,12 @@ class _DisplayProfilePageState extends State<DisplayProfilePage> {
             padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
             width: double.infinity,
             decoration: BoxDecoration(
-              color: Colors.grey[200],
+              color: Colors.grey[850], // Darker background for contrast
               borderRadius: BorderRadius.circular(10),
             ),
             child: Text(
               value.isEmpty ? 'Kiritilmagan' : value,
-              style: const TextStyle(fontSize: 16, color: Colors.black),
+              style: const TextStyle(fontSize: 16, color: Colors.white),
             ),
           ),
         ],
@@ -368,9 +377,13 @@ class _DisplayProfilePageState extends State<DisplayProfilePage> {
         },
         decoration: InputDecoration(
           labelText: labelText,
+          labelStyle: const TextStyle(color: Colors.white), // Label color
           border: OutlineInputBorder(
             borderRadius: BorderRadius.circular(10),
+            borderSide: const BorderSide(color: Colors.grey),
           ),
+          filled: true,
+          fillColor: Colors.grey[800], // Input background color
         ),
       ),
     );
@@ -393,9 +406,13 @@ class _DisplayProfilePageState extends State<DisplayProfilePage> {
             },
             decoration: InputDecoration(
               labelText: labelText,
+              labelStyle: const TextStyle(color: Colors.white), // Label color
               border: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(10),
+                borderSide: const BorderSide(color: Colors.grey),
               ),
+              filled: true,
+              fillColor: Colors.grey[800], // Input background color
             ),
           ),
         ),
@@ -417,14 +434,20 @@ class _DisplayProfilePageState extends State<DisplayProfilePage> {
         },
         decoration: InputDecoration(
           labelText: labelText,
+          labelStyle: const TextStyle(color: Colors.white), // Label color
           border: OutlineInputBorder(
             borderRadius: BorderRadius.circular(10),
+            borderSide: const BorderSide(color: Colors.grey),
           ),
+          filled: true,
+          fillColor: Colors.grey[800], // Input background color
         ),
         items: items.map<DropdownMenuItem<String>>((String value) {
           return DropdownMenuItem<String>(
             value: value,
-            child: Text(value),
+            child: Text(value,
+                style: const TextStyle(
+                    color: Colors.white)), // Dropdown item color
           );
         }).toList(),
         onChanged: onChanged,

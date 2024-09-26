@@ -1,19 +1,21 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:intl/intl.dart'; // Для форматирования времени
+import 'package:intl/intl.dart'; // Vaqtni formatlash uchun
 
 class ChatDetailPage extends StatefulWidget {
   final String chatId;
-  final String userId; // Email of the user (used to fetch the user's name)
   final String
-      chatUserName; // Email passed from the chat list (we'll replace it with the actual name)
+      userId; // Foydalanuvchining emaili (foydalanuvchi ismini olish uchun)
+  final String
+      chatUserName; // Chat ro'yxatidan uzatilgan email (haqiqiy ism bilan almashtiriladi)
 
-  const ChatDetailPage(
-      {super.key,
-      required this.chatId,
-      required this.userId,
-      required this.chatUserName});
+  const ChatDetailPage({
+    super.key,
+    required this.chatId,
+    required this.userId,
+    required this.chatUserName,
+  });
 
   @override
   _ChatDetailPageState createState() => _ChatDetailPageState();
@@ -32,10 +34,10 @@ class _ChatDetailPageState extends State<ChatDetailPage> {
     super.initState();
     currentUserEmail = _auth.currentUser!.email!;
 
-    // Устанавливаем активный статус при входе в чат
+    // Chatga kirilganda faol status o'rnatiladi
     _setActiveStatus(true);
 
-    // Проверяем, прочитаны ли сообщения собеседником
+    // Xabarlar o'qilganligini tekshiramiz
     _checkIfMessagesRead();
   }
 
@@ -50,7 +52,7 @@ class _ChatDetailPageState extends State<ChatDetailPage> {
       'isActive': isActive,
       'chatId': widget.chatId,
     }).catchError((error) {
-      print("Ошибка обновления статуса пользователя: $error");
+      print("Foydalanuvchi statusini yangilashda xatolik: $error");
     });
   }
 
@@ -75,7 +77,7 @@ class _ChatDetailPageState extends State<ChatDetailPage> {
         'receiverId': widget.userId,
         'message': message,
         'timestamp': FieldValue.serverTimestamp(),
-        'status': 'delivered',
+        'status': 'yetkazilgan',
       });
 
       await _firestore.collection('chats').doc(widget.chatId).update({
@@ -92,7 +94,7 @@ class _ChatDetailPageState extends State<ChatDetailPage> {
         );
       }
     } catch (e) {
-      print('Ошибка отправки сообщения: $e');
+      print('Xabarni yuborishda xatolik: $e');
     }
   }
 
@@ -102,22 +104,23 @@ class _ChatDetailPageState extends State<ChatDetailPage> {
         .doc(widget.chatId)
         .collection('messages')
         .where('receiverId', isEqualTo: currentUserEmail)
-        .where('status', isEqualTo: 'delivered')
+        .where('status', isEqualTo: 'yetkazilgan')
         .get();
 
     for (var doc in unreadMessages.docs) {
       await doc.reference.update({
-        'status': 'read',
+        'status': 'o\'qilgan',
       });
     }
     await _firestore.collection('chats').doc(widget.chatId).update({
-      'lastMessageStatus': 'read', // Обновляем статус последнего сообщения
+      'lastMessageStatus': 'o\'qilgan', // Oxirgi xabar statusini yangilaymiz
     });
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: const Color(0xFF1F1F1F),
       appBar: AppBar(
         title: StreamBuilder<DocumentSnapshot>(
           stream: _firestore.collection('users').doc(widget.userId).snapshots(),
@@ -127,22 +130,24 @@ class _ChatDetailPageState extends State<ChatDetailPage> {
             }
 
             if (!snapshot.hasData || !snapshot.data!.exists) {
-              return Text('Чат с ${widget.chatUserName}');
+              return Text('${widget.chatUserName} bilan chat');
             }
 
-            // Get the user's name from the Firestore data
+            // Firestore ma'lumotlaridan foydalanuvchi ismini olish
             var userData = snapshot.data!.data() as Map<String, dynamic>;
             String userName = userData['firstName'] ??
                 widget
-                    .chatUserName; // Default to email if name is not available
+                    .chatUserName; // Agar ism mavjud bo'lmasa, emaildan foydalanamiz
             bool isUserActiveInChat = userData['isActive'] == true &&
                 userData['chatId'] == widget.chatId;
 
             return Text(
-              'Чат с $userName ${isUserActiveInChat ? "(online)" : ""}',
+              '$userName bilan chat ${isUserActiveInChat ? "(onlayn)" : ""}',
+              style: const TextStyle(color: Colors.white),
             );
           },
         ),
+        backgroundColor: Colors.grey[800],
       ),
       body: Column(
         children: [
@@ -180,12 +185,13 @@ class _ChatDetailPageState extends State<ChatDetailPage> {
 
                     String message = messageData['message'];
                     String status = messageData['status'];
-                    var timestamp = messageData['timestamp']; // Can be null
+                    var timestamp =
+                        messageData['timestamp']; // Bo'lishi mumkin null
 
-                    // Default value if the timestamp is null
-                    String formattedTime = "Unknown Time";
+                    // Agar timestamp null bo'lsa, "Noma'lum vaqt" ko'rsatiladi
+                    String formattedTime = "Noma'lum vaqt";
 
-                    // If timestamp is not null, format it to a readable time
+                    // Agar timestamp null bo'lmasa, formatlangan vaqtni ko'rsatamiz
                     if (timestamp != null && timestamp is Timestamp) {
                       formattedTime =
                           DateFormat.Hm().format(timestamp.toDate());
@@ -193,7 +199,6 @@ class _ChatDetailPageState extends State<ChatDetailPage> {
 
                     bool isMe = messageData['senderId'] == currentUserEmail;
 
-                    // Now pass the formattedTime to your _buildMessage method
                     return _buildMessage(message, isMe, status, formattedTime);
                   },
                 );
@@ -209,10 +214,13 @@ class _ChatDetailPageState extends State<ChatDetailPage> {
                     child: TextField(
                       controller: _messageController,
                       decoration: InputDecoration(
-                        hintText: 'Введите сообщение...',
+                        hintText: 'Xabarni kiriting...',
                         border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(20.0),
+                          borderSide: const BorderSide(color: Colors.grey),
                         ),
+                        filled: true,
+                        fillColor: Colors.grey[850],
                         contentPadding:
                             const EdgeInsets.symmetric(horizontal: 16.0),
                       ),
@@ -234,7 +242,8 @@ class _ChatDetailPageState extends State<ChatDetailPage> {
   }
 
   Widget _buildMessage(String message, bool isMe, String status, String time) {
-    IconData messageStatusIcon = status == 'read' ? Icons.done_all : Icons.done;
+    IconData messageStatusIcon =
+        status == 'o\'qilgan' ? Icons.done_all : Icons.done;
 
     return Container(
       margin: const EdgeInsets.symmetric(vertical: 8.0),
@@ -265,7 +274,7 @@ class _ChatDetailPageState extends State<ChatDetailPage> {
                   isMe ? MainAxisAlignment.end : MainAxisAlignment.start,
               children: [
                 Text(
-                  time, // Display the formatted time
+                  time, // Formatlangan vaqtni ko'rsatish
                   style: const TextStyle(
                     fontSize: 12,
                     color: Colors.grey,
@@ -277,7 +286,7 @@ class _ChatDetailPageState extends State<ChatDetailPage> {
                     child: Icon(
                       messageStatusIcon,
                       size: 16.0,
-                      color: status == 'read' ? Colors.blue : Colors.grey,
+                      color: status == 'o\'qilgan' ? Colors.blue : Colors.grey,
                     ),
                   ),
               ],
