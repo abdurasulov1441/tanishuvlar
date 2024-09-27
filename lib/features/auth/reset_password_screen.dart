@@ -70,7 +70,7 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
             onPressed: () {
               Navigator.pop(context);
             },
-            icon: Icon(
+            icon: const Icon(
               Icons.arrow_back,
               color: Colors.white,
             )),
@@ -99,7 +99,7 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
                   border: OutlineInputBorder(
                     borderRadius:
                         BorderRadius.circular(20.0), // Rounded corners
-                    borderSide: BorderSide(color: AppColors.textColor),
+                    borderSide: const BorderSide(color: AppColors.textColor),
                   ),
                   hintText: 'Emailingizni kiriting',
                   hintStyle: AppStyle.fontStyle.copyWith(color: Colors.grey),

@@ -86,8 +86,8 @@ class ChatPage extends StatelessWidget {
 
               return ListTile(
                 leading: const CircleAvatar(
-                  child: Icon(Icons.person),
                   backgroundColor: Colors.grey,
+                  child: Icon(Icons.person),
                 ),
                 title: Text(
                   '$chatPartnerEmail bilan chat', // Suhbatdoshning emailini ko'rsatish

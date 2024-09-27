@@ -261,7 +261,7 @@ class _SearchPageState extends State<SearchPage> {
                 labelText: 'Ism/Familiya bo\'yicha qidirish',
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(20.0),
-                  borderSide: BorderSide(color: Colors.grey),
+                  borderSide: const BorderSide(color: Colors.grey),
                 ),
                 filled: true,
                 fillColor: Colors.grey[850],
@@ -275,7 +275,7 @@ class _SearchPageState extends State<SearchPage> {
                 labelText: 'Jins',
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(20.0),
-                  borderSide: BorderSide(color: Colors.grey),
+                  borderSide: const BorderSide(color: Colors.grey),
                 ),
                 filled: true,
                 fillColor: Colors.grey[850],
@@ -304,7 +304,7 @@ class _SearchPageState extends State<SearchPage> {
                 labelText: 'Muloqot maqsadi',
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(20.0),
-                  borderSide: BorderSide(color: Colors.grey),
+                  borderSide: const BorderSide(color: Colors.grey),
                 ),
                 filled: true,
                 fillColor: Colors.grey[850],
@@ -333,7 +333,7 @@ class _SearchPageState extends State<SearchPage> {
                 labelText: 'Hudud',
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(20.0),
-                  borderSide: BorderSide(color: Colors.grey),
+                  borderSide: const BorderSide(color: Colors.grey),
                 ),
                 filled: true,
                 fillColor: Colors.grey[850],

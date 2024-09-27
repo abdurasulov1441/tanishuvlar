@@ -330,7 +330,7 @@ class _DisplayProfilePageState extends State<DisplayProfilePage> {
                         _buildProfileField('Telefon', phone ?? 'Kiritilmagan'),
                         _buildProfileField('Muloqot maqsadi',
                             _selectedCommunicationGoal ?? 'Kiritilmagan'),
-                        SizedBox(
+                        const SizedBox(
                           height: 30,
                         )
                       ],

@@ -1,4 +1,4 @@
-package com.example.tanishuvlar
+package com.tanishuvlar.chati
 
 import io.flutter.embedding.android.FlutterActivity
 

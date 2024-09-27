@@ -63,6 +63,6 @@ class DefaultFirebaseOptions {
     messagingSenderId: '765726467476',
     projectId: 'tanishuvlar-340ef',
     storageBucket: 'tanishuvlar-340ef.appspot.com',
-    iosBundleId: 'com.example.tanishuvlar',
+    iosBundleId: 'com.tanishuvlar.chati',
   );
 }
